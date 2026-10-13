@@ -131,6 +131,7 @@ html,body{{margin:0;padding:0;width:100%;height:auto;min-height:0;background:var
 #fullscreenBtn{{right:14px;top:18px}}
 #exitFullscreenBtn{{right:18px;top:max(14px,env(safe-area-inset-top));display:none}}
 #fullscreenBtn svg,#exitFullscreenBtn svg{{display:block;width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}}
+#mindMapZoom{{position:absolute;z-index:30;right:12px;bottom:12px;display:flex;gap:4px;padding:4px;border:1px solid var(--mm-border);border-radius:10px;background:var(--mm-button-bg)}}#mindMapZoom button{{width:30px;height:30px;border:0;border-radius:6px;background:transparent;color:var(--mm-text);font:600 18px/1 sans-serif;cursor:pointer}}#mindMapZoom button:focus-visible{{outline:2px solid var(--mm-muted);outline-offset:1px}}
 pre.markmap{{position:absolute;inset:0;margin:0;padding:0;background:transparent;white-space:pre}}
 svg.markmap{{width:100%!important;height:100%!important}}
 svg.markmap text{{fill:var(--mm-text)!important;opacity:1!important;font-weight:600}}
@@ -164,6 +165,7 @@ body.is-fullscreen.is-forced-landscape #container{{width:100vh;height:100vw;left
   <button id="exitFullscreenBtn" type="button" aria-label="退出全屏" title="退出全屏">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v6H3"></path><path d="M15 3v6h6"></path><path d="M21 15h-6v6"></path><path d="M3 15h6v6"></path></svg>
   </button>
+<div id="mindMapZoom" role="group" aria-label="画布缩放"><button type="button" data-map-zoom="out" aria-label="缩小画布" title="缩小">−</button><button type="button" data-map-zoom="fit" aria-label="适应画布" title="适应画布">⤢</button><button type="button" data-map-zoom="in" aria-label="放大画布" title="放大">+</button></div>
   <pre class="markmap" id="mm"></pre>
 </div>
 <script>
@@ -171,6 +173,45 @@ document.getElementById("mm").textContent = {markdown_json};
 const container = document.getElementById("container");
 const fullscreenBtn = document.getElementById("fullscreenBtn");
 const exitFullscreenBtn = document.getElementById("exitFullscreenBtn");
+
+let mindMapInteracted = false;
+function applyMindMapTransform(svg, group, tx, ty, scale){{
+  group.setAttribute("transform", `translate(${{tx}},${{ty}}) scale(${{scale}})`);
+  // D3's next held drag must start from the same transform as the visible group.
+  if (svg.__zoom) svg.__zoom = new svg.__zoom.constructor(scale, tx, ty);
+}}
+function zoomMindMap(factor, clientX, clientY){{
+  const svg=document.querySelector("svg.markmap"), group=svg?.querySelector("g");
+  if(!svg||!group)return;
+  const matrix=group.transform.baseVal.consolidate()?.matrix;
+  if(!matrix)return;
+  const rect=svg.getBoundingClientRect(),point=svg.createSVGPoint();point.x=clientX==null?rect.left+rect.width/2:clientX;point.y=clientY==null?rect.top+rect.height/2:clientY;const local=point.matrixTransform(svg.getScreenCTM().inverse()),cx=local.x,cy=local.y;
+  const scale=Math.max(.1,Math.min(8,matrix.a*factor)),ratio=scale/matrix.a;
+  mindMapInteracted=true;
+  applyMindMapTransform(svg,group,cx-(cx-matrix.e)*ratio,cy-(cy-matrix.f)*ratio,scale);
+}}
+document.querySelectorAll("[data-map-zoom]").forEach(button=>button.addEventListener("click",()=>{{
+  if(button.dataset.mapZoom==="fit"){{mindMapInteracted=false;refitMindMap();}}
+  else zoomMindMap(button.dataset.mapZoom==="in"?1.25:.8);
+}}));
+container.addEventListener("wheel",event=>{{
+  if(!event.target.closest?.("svg.markmap"))return;
+  event.stopImmediatePropagation();
+  if(event.ctrlKey||event.metaKey){{event.preventDefault();zoomMindMap(Math.exp(-event.deltaY*.01),event.clientX,event.clientY);}}
+}},{{capture:true,passive:false}});
+let pinchDistance=0;
+container.addEventListener("touchstart",event=>{{
+  if(event.touches.length!==2)return;
+  pinchDistance=Math.hypot(event.touches[0].clientX-event.touches[1].clientX,event.touches[0].clientY-event.touches[1].clientY);
+  event.preventDefault();event.stopImmediatePropagation();
+}},{{capture:true,passive:false}});
+container.addEventListener("touchmove",event=>{{
+  if(event.touches.length!==2||!pinchDistance)return;
+  const a=event.touches[0],b=event.touches[1],distance=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+  event.preventDefault();event.stopImmediatePropagation();zoomMindMap(distance/pinchDistance,(a.clientX+b.clientX)/2,(a.clientY+b.clientY)/2);pinchDistance=distance;
+}},{{capture:true,passive:false}});
+container.addEventListener("touchend",()=>{{pinchDistance=0;}});
+
 function forceMindMapTextStyle(){{
   const styles = getComputedStyle(document.body);
   const textColor = styles.getPropertyValue("--mm-text").trim() || "#111827";
@@ -221,7 +262,7 @@ function fitMindMapBelowTitle(){{
   const centeredY = padTop + Math.max(0, usableH - renderedH) / 2;
   const maxY = Math.max(padTop, height - padBottom - renderedH);
   const ty = Math.min(maxY, centeredY) - box.y * scale;
-  group.setAttribute("transform", `translate(${{tx}},${{ty}}) scale(${{scale}})`);
+  applyMindMapTransform(svg, group, tx, ty, scale);
 }}
 function fillMindMapFullscreen(){{
   const svg = document.querySelector("svg.markmap");
@@ -240,7 +281,7 @@ function fillMindMapFullscreen(){{
   const scale = Math.max(0.1, Math.min(usableW / box.width, usableH / box.height));
   const tx = padX + (usableW - box.width * scale) / 2 - box.x * scale;
   const ty = padTop + (usableH - box.height * scale) / 2 - box.y * scale;
-  group.setAttribute("transform", `translate(${{tx}},${{ty}}) scale(${{scale}})`);
+  applyMindMapTransform(svg, group, tx, ty, scale);
 }}
 function updateFullscreenLayout(){{
   const active = document.body.classList.contains("is-fullscreen");
@@ -310,7 +351,7 @@ document.addEventListener("webkitfullscreenchange", () => {{
 window.addEventListener("load", refitMindMap);
 window.addEventListener("resize", refitMindMap);
 window.addEventListener("orientationchange", () => {{ setTimeout(refitMindMap,120); setTimeout(refitMindMap,420); }});
-setTimeout(refitMindMap,300);setTimeout(refitMindMap,900);setTimeout(refitMindMap,1800);
+[300,900,1800].forEach(delay=>setTimeout(()=>{{if(!mindMapInteracted)refitMindMap();}},delay));
 if ("ResizeObserver" in window) {{
   try {{ new ResizeObserver(refitMindMap).observe(container); }} catch (e) {{}}
 }}
