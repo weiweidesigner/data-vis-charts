@@ -131,7 +131,7 @@ html,body{{margin:0;padding:0;width:100%;height:auto;min-height:0;background:var
 #fullscreenBtn{{right:14px;top:18px}}
 #exitFullscreenBtn{{right:18px;top:max(14px,env(safe-area-inset-top));display:none}}
 #fullscreenBtn svg,#exitFullscreenBtn svg{{display:block;width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}}
-#mindMapZoom{{position:absolute;z-index:30;right:12px;bottom:12px;display:flex;gap:4px;padding:4px;border:1px solid var(--mm-border);border-radius:10px;background:var(--mm-button-bg)}}#mindMapZoom button{{width:30px;height:30px;border:0;border-radius:6px;background:transparent;color:var(--mm-text);font:600 18px/1 sans-serif;cursor:pointer}}#mindMapZoom button:focus-visible{{outline:2px solid var(--mm-muted);outline-offset:1px}}
+#mindMapZoom{{position:absolute;z-index:30;right:12px;bottom:12px;display:none;gap:4px;padding:4px;border:1px solid var(--mm-border);border-radius:10px;background:var(--mm-button-bg)}}#mindMapZoom button{{width:30px;height:30px;border:0;border-radius:6px;background:transparent;color:var(--mm-text);font:600 18px/1 sans-serif;cursor:pointer}}#mindMapZoom button:focus-visible{{outline:2px solid var(--mm-muted);outline-offset:1px}}
 pre.markmap{{position:absolute;inset:0;margin:0;padding:0;background:transparent;white-space:pre}}
 svg.markmap{{width:100%!important;height:100%!important}}
 svg.markmap text{{fill:var(--mm-text)!important;opacity:1!important;font-weight:600}}
