@@ -221,7 +221,7 @@ svg{{display:block;width:100%;height:100%;overflow:visible}}
 .hit-area{{cursor:crosshair}}
 .highlight{{fill:var(--business-text-f7f7f7);pointer-events:none}}
 .waterfall-tooltip{{position:absolute;z-index:5;min-width:160px;padding:7px 10px;background:var(--business-bg-3a3a3a);color:var(--business-text-fff);border-radius:5px;font-size:13px;line-height:1.5;pointer-events:none;opacity:0;visibility:hidden}}
-.waterfall-tooltip::after{{content:"";position:absolute;left:var(--arrow-left,50%);bottom:-8px;transform:translateX(-50%);border-left:9px solid transparent;border-right:9px solid transparent;border-top:9px solid var(--business-border-3a3a3a)}}
+.waterfall-tooltip::after{{content:"";position:absolute;left:var(--arrow-left,50%);bottom:-8px;transform:translateX(-50%);border-left:9px solid transparent;border-right:9px solid transparent;border-top:9px solid var(--business-bg-3a3a3a)}}
 .waterfall-tooltip.active{{opacity:1;visibility:visible}}
 .tooltip-row{{display:flex;justify-content:space-between;align-items:center;gap:18px;white-space:nowrap}}
 .tooltip-label{{display:flex;align-items:center;gap:7px;color:var(--business-text-fff)}}

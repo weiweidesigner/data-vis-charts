@@ -496,6 +496,7 @@ function renderChart(){
     animationEasingUpdate:"cubicInOut",
     grid:{left:l.left,right:l.right,top:l.top,bottom:l.bottom,containLabel:false},
     tooltip:{
+      className:"generic-canvas-tooltip",
       trigger:"item",
       backgroundColor:"rgba(255,255,255,.98)",
       borderColor:"#dfe5ee",
