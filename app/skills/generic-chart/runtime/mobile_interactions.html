@@ -6,24 +6,27 @@ svg:not(.markmap),canvas,#chart,#chart>div,.range-shell{touch-action:pan-y!impor
 <script id="genericMobileTouch">
 (() => {
   const hits = '.hover-zone,.hit-area,.pie-slice,.ring-arc,.treemap-cell';
-  let gesture = null, active = null, dismissTimer = null;
+  let gesture = null, active = null, dismissTimer = null, nativeHovered = false, touchOrigin = null;
   const emit = (node,type,event) => node?.dispatchEvent(new MouseEvent(type,{clientX:event.clientX,clientY:event.clientY,bubbles:false}));
   const clear = event => {
     clearTimeout(dismissTimer);dismissTimer=null;
-    emit(active,'mouseleave',event);active=null;
+    const hadTooltip=Boolean(active||nativeHovered);
+    emit(active,'mouseleave',event);active=null;nativeHovered=false;
     // Compatibility mouse events may open a native portal without setting active.
-    if(typeof hideTooltip==='function')hideTooltip();
+    if(hadTooltip&&typeof hideTooltip==='function')hideTooltip();
   };
   const dismiss = () => {gesture=null;clear({clientX:0,clientY:0});};
   const select = event => {
     const target=document.elementFromPoint(event.clientX,event.clientY)?.closest(hits)||event.target?.closest(hits);
     if(target!==active){clear(event);active=target;emit(active,'mouseenter',event);}
-    emit(active,'mousemove',event);
+    // Row tooltips are anchored to the datum, so moving inside the same row
+    // must not rebuild the portal and synchronously measure its geometry.
+    if(active?.matches('.pie-slice,.ring-arc,.treemap-cell'))emit(active,'mousemove',event);
   };
   document.addEventListener('pointerdown',event=>{
     if(event.pointerType==='touch')clear(event);
-    if(event.pointerType!=='touch'||event.target.closest('.markmap,.range-shell,button,input'))return;
-    if(!event.target.closest('svg,canvas,.treemap-cell'))return;
+    if(event.pointerType!=='touch'||event.target.closest?.('.markmap,.range-shell,button,input'))return;
+    if(!event.target.closest?.('svg,canvas,.treemap-cell'))return;
     gesture={id:event.pointerId,x:event.clientX,y:event.clientY,vertical:false};
   },{capture:true,passive:true});
   document.addEventListener('pointermove',event=>{
@@ -41,13 +44,23 @@ svg:not(.markmap),canvas,#chart,#chart>div,.range-shell{touch-action:pan-y!impor
     dismissTimer=setTimeout(dismiss,1200);
   },{passive:true});
   document.addEventListener('pointercancel',event=>{gesture=null;clear(event);},{passive:true});
-  // ZRender and other runtimes also listen to legacy touchmove. Let vertical
-  // gestures reach the browser without their canvas handlers cancelling scroll.
-  document.addEventListener('touchmove',event=>{
-    if(gesture?.vertical&&event.touches.length===1)event.stopImmediatePropagation();
+  // Track the touch stream independently: pointercancel happens when the
+  // browser starts scrolling, before legacy touchmove listeners finish.
+  document.addEventListener('touchstart',event=>{
+    if(event.touches.length!==1||event.target.closest?.('.markmap,.range-shell,input,textarea,select')){touchOrigin=null;return;}
+    const t=event.touches[0];touchOrigin={x:t.clientX,y:t.clientY,vertical:false};
   },{capture:true,passive:true});
+  document.addEventListener('touchmove',event=>{
+    if(!touchOrigin||event.touches.length!==1)return;
+    const t=event.touches[0],dx=Math.abs(t.clientX-touchOrigin.x),dy=Math.abs(t.clientY-touchOrigin.y);
+    if(touchOrigin.vertical||(dy>6&&dy>dx)){
+      touchOrigin.vertical=true;event.stopImmediatePropagation();
+    }
+  },{capture:true,passive:true});
+  for(const type of ['touchend','touchcancel'])document.addEventListener(type,()=>{touchOrigin=null;},{passive:true});
   for(const type of ['mouseover','mouseenter','mousemove'])document.addEventListener(type,event=>{
-    if(event.sourceCapabilities?.firesTouchEvents)event.stopImmediatePropagation();
+    if(event.sourceCapabilities?.firesTouchEvents){event.stopImmediatePropagation();return;}
+    if(event.target.closest?.(hits))nativeHovered=true;
   },{capture:true,passive:true});
   let host=window;
   try {
