@@ -1,0 +1,46 @@
+<style id="genericMobileTouchStyle">
+svg:not(.markmap),canvas,#chart,#chart>div,.range-shell{touch-action:pan-y!important}
+#viewport svg{touch-action:auto!important}
+.treemap-cell{-webkit-tap-highlight-color:transparent;touch-action:pan-y}
+</style>
+<script id="genericMobileTouch">
+(() => {
+  const hits = '.hover-zone,.hit-area,.pie-slice,.ring-arc,.treemap-cell';
+  let gesture = null, active = null;
+  const emit = (node,type,event) => node?.dispatchEvent(new MouseEvent(type,{clientX:event.clientX,clientY:event.clientY,bubbles:false}));
+  const clear = event => { emit(active,'mouseleave',event);active=null; };
+  const select = event => {
+    const target=document.elementFromPoint(event.clientX,event.clientY)?.closest(hits)||event.target?.closest(hits);
+    if(target!==active){clear(event);active=target;emit(active,'mouseenter',event);}
+    emit(active,'mousemove',event);
+  };
+  document.addEventListener('pointerdown',event=>{
+    if(event.pointerType!=='touch'||event.target.closest('.markmap,.range-shell,button,input'))return;
+    if(!event.target.closest('svg,canvas,.treemap-cell'))return;
+    gesture={id:event.pointerId,x:event.clientX,y:event.clientY,vertical:false};
+  },{capture:true,passive:true});
+  document.addEventListener('pointermove',event=>{
+    if(!gesture||event.pointerId!==gesture.id)return;
+    const dx=Math.abs(event.clientX-gesture.x),dy=Math.abs(event.clientY-gesture.y);
+    if(gesture.vertical||(dy>6&&dy>dx)){
+      gesture.vertical=true;clear(event);event.stopImmediatePropagation();return;
+    }
+    if(dx>6)select(event);
+  },{capture:true,passive:true});
+  document.addEventListener('pointerup',event=>{
+    if(!gesture||event.pointerId!==gesture.id)return;
+    if(!gesture.vertical)select(event);
+    gesture=null;
+  },{passive:true});
+  document.addEventListener('pointercancel',event=>{gesture=null;clear(event);},{passive:true});
+  // ZRender and other runtimes also listen to legacy touchmove. Let vertical
+  // gestures reach the browser without their canvas handlers cancelling scroll.
+  document.addEventListener('touchmove',event=>{
+    if(gesture?.vertical&&event.touches.length===1)event.stopImmediatePropagation();
+  },{capture:true,passive:true});
+  let host=window;
+  try {
+    while(host){host.addEventListener('scroll',()=>clear({clientX:0,clientY:0}),{capture:true,passive:true});if(host===host.parent)break;host=host.parent;}
+  } catch (_) {}
+})();
+</script>

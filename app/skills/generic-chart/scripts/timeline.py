@@ -845,6 +845,7 @@ if("ResizeObserver" in window){
   }catch(e){}
 }
 </script>
+__MOBILE_TOUCH__
 </body>
 </html>'''
 
@@ -852,6 +853,7 @@ if("ResizeObserver" in window){
         template.replace("__TITLE__", safe_title)
         .replace("__ITEMS__", items_json)
         .replace("__CONFIG__", config_json)
+        .replace("__MOBILE_TOUCH__", (Path(__file__).resolve().parents[1] / "runtime/mobile_interactions.html").read_text(encoding="utf-8"))
     )
 
 

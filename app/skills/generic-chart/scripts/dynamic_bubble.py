@@ -392,7 +392,8 @@ if(!rows.length||!enc.x||!enc.y||!enc.size){{empty.style.display="flex";timeline
  addEventListener("resize",()=>{{chart.resize();renderChart();postChartHeight();}});
  renderLegend();setPlayState();renderChart();setTimeout(postChartHeight,80);setTimeout(postChartHeight,300);
 }}
-</script></body></html>"""
+</script>{(Path(__file__).resolve().parents[1] / "runtime/mobile_interactions.html").read_text(encoding="utf-8")}
+</body></html>"""
 
 
 def main() -> int:

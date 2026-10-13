@@ -307,6 +307,7 @@ function showTooltip(event, ring, index) {{
 	setTimeout(postChartHeight,80);
 	setTimeout(postChartHeight,300);
 	</script>
+{(Path(__file__).resolve().parents[1] / "runtime/mobile_interactions.html").read_text(encoding="utf-8")}
 </body>
 </html>""", payload)
 

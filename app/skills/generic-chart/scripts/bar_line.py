@@ -388,7 +388,7 @@ svg{{display:block;width:100%;height:100%;overflow:visible}}
 .tooltip-label{{display:flex;align-items:center;gap:5px;color:#f5f5f5;min-width:0}}
 .tooltip-dot{{width:7px;height:7px;border-radius:50%;flex:none}}
 .tooltip-value{{margin-left:auto;color:#fff;font-weight:650;font-variant-numeric:tabular-nums}}
-.range-shell{{display:none;--handle-size:32px;height:var(--handle-size);margin:6px 0 0;padding:0 calc(var(--handle-size) / 2);position:relative;touch-action:none}}
+.range-shell{{display:none;--handle-size:32px;height:var(--handle-size);margin:6px 0 0;padding:0 calc(var(--handle-size) / 2);position:relative;touch-action:pan-y}}
 .chart-component.has-range .range-shell{{display:block}}
 .range-shell[hidden]{{display:none}}
 .range-track{{position:relative;width:100%;height:var(--handle-size)}}
@@ -684,30 +684,40 @@ function updateRangeByIndex(index) {{
   render();
 }}
 function setupRangeDrag() {{
+  let origin = null;
+  const rememberTouch = event => {{ origin = event.pointerType === 'touch' ? {{x:event.clientX,y:event.clientY}} : null; }};
   const startDrag = handle => event => {{
+    rememberTouch(event);
     draggingRangeHandle = handle;
     event.currentTarget.setPointerCapture?.(event.pointerId);
-    event.preventDefault();
+    if (event.pointerType !== 'touch') event.preventDefault();
   }};
   leftHandle.addEventListener('pointerdown', startDrag('left'));
   rightHandle.addEventListener('pointerdown', startDrag('right'));
   rangeTrack.addEventListener('pointerdown', event => {{
     if (event.target.closest('.range-handle')) return;
+    rememberTouch(event);
     const rows = fullRows();
     if (rows.length < rangeThreshold()) return;
     ensureRangeState();
     const index = rangeIndexFromClientX(event.clientX, rows.length);
     draggingRangeHandle = Math.abs(index - rangeStart) <= Math.abs(index - rangeEnd) ? 'left' : 'right';
-    updateRangeByIndex(index);
-    event.preventDefault();
+    if (!origin) updateRangeByIndex(index);
+    if (event.pointerType !== 'touch') event.preventDefault();
   }});
   window.addEventListener('pointermove', event => {{
     if (!draggingRangeHandle) return;
+    if (origin) {{
+      const dx=Math.abs(event.clientX-origin.x),dy=Math.abs(event.clientY-origin.y);
+      if(dy>6&&dy>dx){{draggingRangeHandle=null;return;}}
+      if(dx<6)return;
+    }}
     const rows = fullRows();
     if (rows.length < rangeThreshold()) return;
     updateRangeByIndex(rangeIndexFromClientX(event.clientX, rows.length));
   }});
-  window.addEventListener('pointerup', () => {{ draggingRangeHandle = null; }});
+  window.addEventListener('pointerup', event => {{ if(draggingRangeHandle&&origin)updateRangeByIndex(rangeIndexFromClientX(event.clientX,fullRows().length));draggingRangeHandle=null;origin=null; }});
+  window.addEventListener('pointercancel', () => {{draggingRangeHandle=null;origin=null;}});
 }}
 setupRangeDrag();
 function fmt(value, axis) {{
@@ -1217,6 +1227,7 @@ postChartHeight();
 setTimeout(postChartHeight, 80);
 setTimeout(postChartHeight, 300);
 </script>
+{(Path(__file__).resolve().parents[1] / "runtime/mobile_interactions.html").read_text(encoding="utf-8")}
 </body>
 </html>"""
 

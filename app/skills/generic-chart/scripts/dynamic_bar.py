@@ -623,7 +623,7 @@ def build_html(payload: dict[str, Any]) -> str:
         },
         ensure_ascii=False,
     )
-    return HTML_TEMPLATE.replace("__TITLE__", html.escape(title)).replace("__DATA__", packed)
+    return HTML_TEMPLATE.replace("__TITLE__", html.escape(title)).replace("__DATA__", packed).replace("</body>", (Path(__file__).resolve().parents[1] / "runtime/mobile_interactions.html").read_text(encoding="utf-8") + "</body>")
 
 
 def main() -> int:

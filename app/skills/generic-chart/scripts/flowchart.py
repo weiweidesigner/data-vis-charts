@@ -1010,6 +1010,7 @@ window.addEventListener("orientationchange", () => {{
   setTimeout(refitDiagram, 420);
 }});
 </script>
+{(Path(__file__).resolve().parents[1] / "runtime/mobile_interactions.html").read_text(encoding="utf-8")}
 </body>
 </html>"""
 

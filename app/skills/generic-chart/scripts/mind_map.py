@@ -133,7 +133,7 @@ html,body{{margin:0;padding:0;width:100%;height:auto;min-height:0;background:var
 #fullscreenBtn svg,#exitFullscreenBtn svg{{display:block;width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}}
 #mindMapZoom{{position:absolute;z-index:30;right:12px;bottom:12px;display:none;gap:4px;padding:4px;border:1px solid var(--mm-border);border-radius:10px;background:var(--mm-button-bg)}}#mindMapZoom button{{width:30px;height:30px;border:0;border-radius:6px;background:transparent;color:var(--mm-text);font:600 18px/1 sans-serif;cursor:pointer}}#mindMapZoom button:focus-visible{{outline:2px solid var(--mm-muted);outline-offset:1px}}
 pre.markmap{{position:absolute;inset:0;margin:0;padding:0;background:transparent;white-space:pre}}
-svg.markmap{{width:100%!important;height:100%!important}}
+svg.markmap{{width:100%!important;height:100%!important;touch-action:auto!important}}
 svg.markmap text{{fill:var(--mm-text)!important;opacity:1!important;font-weight:600}}
 .markmap-foreign,.markmap-foreign *{{color:var(--mm-text)!important;opacity:1!important}}
 svg.markmap .link{{stroke-opacity:var(--mm-link-opacity)!important}}
@@ -199,6 +199,31 @@ container.addEventListener("wheel",event=>{{
   event.stopImmediatePropagation();
   if(event.ctrlKey||event.metaKey){{event.preventDefault();zoomMindMap(Math.exp(-event.deltaY*.01),event.clientX,event.clientY);}}
 }},{{capture:true,passive:false}});
+let heldTouch=null,holdTimer=null;
+const releaseHeldTouch=()=>{{clearTimeout(holdTimer);heldTouch=null;}};
+container.addEventListener('touchstart',event=>{{
+  if(event.touches.length!==1){{releaseHeldTouch();return;}}
+  if(!event.target.closest?.('svg.markmap'))return;
+  const t=event.touches[0];heldTouch={{x:t.clientX,y:t.clientY,active:document.body.classList.contains('is-fullscreen')}};
+  holdTimer=setTimeout(()=>{{if(heldTouch)heldTouch.active=true;}},300);
+  // A quick single-finger swipe scrolls the page; held drag moves the map.
+  event.stopImmediatePropagation();
+}},{{capture:true,passive:true}});
+container.addEventListener('touchmove',event=>{{
+  if(event.touches.length!==1||!heldTouch)return;
+  const t=event.touches[0],dx=t.clientX-heldTouch.x,dy=t.clientY-heldTouch.y;
+  event.stopImmediatePropagation();
+  if(!heldTouch.active){{if(Math.hypot(dx,dy)>8)releaseHeldTouch();return;}}
+  const svg=document.querySelector('svg.markmap'),group=svg?.querySelector('g'),matrix=group?.transform.baseVal.consolidate()?.matrix;
+  if(!matrix)return;
+  event.preventDefault();mindMapInteracted=true;
+  const rect=svg.getBoundingClientRect(),box=svg.viewBox.baseVal;
+  applyMindMapTransform(svg,group,matrix.e+dx*(box.width?box.width/rect.width:1),matrix.f+dy*(box.height?box.height/rect.height:1),matrix.a);
+  heldTouch.x=t.clientX;heldTouch.y=t.clientY;
+}},{{capture:true,passive:false}});
+container.addEventListener('touchend',releaseHeldTouch);
+container.addEventListener('touchcancel',()=>{{releaseHeldTouch();pinchDistance=0;}});
+
 let pinchDistance=0;
 container.addEventListener("touchstart",event=>{{
   if(event.touches.length!==2)return;
@@ -357,6 +382,7 @@ if ("ResizeObserver" in window) {{
 }}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18.12"></script>
+{(Path(__file__).resolve().parents[1] / "runtime/mobile_interactions.html").read_text(encoding="utf-8")}
 </body></html>"""
 
 

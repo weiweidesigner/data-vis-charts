@@ -432,6 +432,7 @@ function hideTooltip() {{
 window.addEventListener('resize', render);
 render();
 </script>
+{(Path(__file__).resolve().parents[1] / "runtime/mobile_interactions.html").read_text(encoding="utf-8")}
 </body>
 </html>""", payload)
 

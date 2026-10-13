@@ -1,0 +1,40 @@
+<style id="dynamicLineMobileLayout">
+.mobileDynamicHeader{display:none}
+@media(max-width:720px){
+ #wrap{height:var(--mobile-dynamic-height,380px)!important;min-height:0!important}
+ .mobileDynamicHeader{display:block;position:absolute;left:0;right:0;top:0;z-index:2}
+ .mobileDynamicTitle{margin:0 0 8px;font-size:14px;line-height:1.4;font-weight:700;color:var(--sv-text,#eef2f7);overflow-wrap:anywhere}
+ .mobileDynamicLegend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 10px}
+ .mobileDynamicLegend button{display:flex;align-items:center;gap:5px;min-width:0;padding:2px 0;border:0;background:transparent;color:inherit;font:10px/1.4 sans-serif;text-align:left;touch-action:manipulation}
+ .mobileDynamicLegend i{width:12px;height:3px;flex-shrink:0;border-radius:2px}
+ .mobileDynamicLegend span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .mobileDynamicLegend b{margin-left:auto;font-weight:500;flex-shrink:0;font-variant-numeric:tabular-nums}
+ .mobileDynamicLegend button[aria-pressed="false"]{opacity:.4}
+ #timelineBar{bottom:0!important;gap:6px!important;padding:4px 0!important}
+ #timelineBar .timeLabel{min-width:22px!important}
+ #timelineBar #playBtn,#timelineBar .pillBtn{flex-shrink:0}
+}
+</style>
+<script>
+const mobileLegendSelection={};
+function updateMobileDynamicHeader(){
+ let header=document.querySelector('.mobileDynamicHeader');
+ if(!header){header=document.createElement('div');header.className='mobileDynamicHeader';document.getElementById('wrap').append(header);}
+ const compact=isCompactLayout();header.hidden=!compact;
+ if(!compact)return;
+ header.replaceChildren();
+ const heading=document.createElement('div');heading.className='mobileDynamicTitle';heading.textContent=title;heading.style.color=window.__projectDynamicLineTheme.text;header.append(heading);
+ const legend=document.createElement('div');legend.className='mobileDynamicLegend';legend.style.color=window.__projectDynamicLineTheme.muted;
+ seriesList.forEach((name,index)=>{
+  const button=document.createElement('button');button.type='button';button.title=name;button.setAttribute('aria-pressed',String(mobileLegendSelection[name]!==false));
+  const marker=document.createElement('i');marker.style.background=colorPalette[index%colorPalette.length].line;
+  const label=document.createElement('span');label.textContent=name.replace(/（(.*?)）/g,'·$1');
+  const value=document.createElement('b'),data=fullSeriesDataMap[name]||[],point=getLastValidPoint(data.slice(0,Math.min(getSafeIndex(),data.length-1)+1));value.textContent=point?formatPlainValue(point.value):'—';
+  button.append(marker,label,value);button.onclick=()=>{mobileLegendSelection[name]=mobileLegendSelection[name]===false;renderChart();};legend.append(button);
+ });
+ header.append(legend);
+ const height=Math.ceil(header.getBoundingClientRect().height)+250+52;
+ const wrap=document.getElementById('wrap');
+ if(wrap.style.getPropertyValue('--mobile-dynamic-height')!==height+'px'){wrap.style.setProperty('--mobile-dynamic-height',height+'px');chart.resize();}
+}
+</script>
