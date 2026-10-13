@@ -1,4 +1,4 @@
-# Data Visualization Charts
+# Data Vis Charts
 
 Aime Chart 通用数据可视化组件库，包含 16 个独立 Python 组件与 16 份 Schema。输入结构化数据，输出可嵌入的 HTML，保留原组件样式、交互和 CLI。
 
