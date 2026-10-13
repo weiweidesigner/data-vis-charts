@@ -1,0 +1,26 @@
+{
+  "chartType": "pie",
+  "script": "pie.py",
+  "purpose": "Show part-to-whole composition with one ring.",
+  "rawDataContract": {"shape": "array<object>", "notes": "Rows can contain category and value fields, or the payload can provide explicit items."},
+  "semanticChannels": [
+    {"channel": "slice.label", "payloadField": "props.items[].label or items[].label", "required": true, "acceptedTypes": ["string"], "semantics": "segment/category name"},
+    {"channel": "slice.value", "payloadField": "props.items[].value or items[].value", "required": true, "acceptedTypes": ["number"], "semantics": "non-negative comparable contribution"},
+    {"channel": "slice.display", "payloadField": "props.items[].displayValue or items[].displayValue", "required": false, "acceptedTypes": ["string"], "semantics": "formatted value or percentage"},
+    {"channel": "center.label", "payloadField": "props.centerLabel or centerLabel", "required": false, "acceptedTypes": ["string"], "semantics": "total or central summary"}
+  ],
+  "payloadShape": {"type": "pie", "props": {"title": "string", "subtitle": "string", "centerLabel": "string", "badgeLabel": "string", "legendPosition": "bottom only, optional", "showLegendValues": "boolean, optional, defaults to false", "showCenterLabel": "boolean, optional, defaults to true", "items": [{"label": "string", "value": "number", "displayValue": "string", "color": "string"}]}},
+  "modelInstructions": [
+    "Values must be non-negative and comparable.",
+    "Use displayValue for percentages or formatted money; keep value numeric.",
+    "Default pie radius should be visually restrained; cap the outer radius around 88px so the circle does not dominate the component.",
+    "Default donut ring width should be relatively slim, around 28px or about 30-32% of the outer radius, unless the user explicitly asks for a thicker ring.",
+    "Always place the legend below the pie; do not place pie legends on the right side.",
+    "Default legends should show only compact inline chips: colored dot plus label, with no numeric value column.",
+    "Use 10px legend text by default.",
+    "Do not set showLegendValues unless the user explicitly asks the legend to include values or percentages.",
+    "When showLegendValues is true, place values close to labels with a compact inline gap; avoid large empty horizontal space between legend labels and values.",
+    "Keep the bottom legend as centered horizontal inline chips with wrapping when needed.",
+    "Keep the vertical distance between the pie ring and bottom legend compact; avoid tall chart-stage whitespace under the ring."
+  ]
+}

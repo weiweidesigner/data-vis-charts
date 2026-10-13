@@ -1,0 +1,25 @@
+{
+  "title": "季度营收",
+  "xField": "quarter",
+  "yField": "revenue",
+  "series": [
+    {
+      "field": "revenue",
+      "label": "营收"
+    }
+  ],
+  "data": [
+    {
+      "quarter": "Q1",
+      "revenue": 120
+    },
+    {
+      "quarter": "Q2",
+      "revenue": 150
+    },
+    {
+      "quarter": "Q3",
+      "revenue": 180
+    }
+  ]
+}

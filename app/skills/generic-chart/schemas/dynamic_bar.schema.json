@@ -1,0 +1,66 @@
+{
+  "chartType": "dynamic-bar",
+  "script": "dynamic_bar.py",
+  "purpose": "Show an animated horizontal ranking chart over time without parent-group classification.",
+  "rawDataContract": {
+    "shape": "array<object>",
+    "notes": "Use one row per item per frame. Each row must contain a frame, an item name, and a numeric value."
+  },
+  "displayMode": {
+    "mode": "flat",
+    "behavior": "Do not show a legend. Assign each ranked item a stable color from the chart palette, and keep that item's color consistent across all frames."
+  },
+  "semanticChannels": [
+    {
+      "channel": "frame",
+      "payloadField": "encode.time or encode.x",
+      "required": true,
+      "acceptedTypes": [
+        "date",
+        "string",
+        "number"
+      ],
+      "semantics": "animation frame or period"
+    },
+    {
+      "channel": "category",
+      "payloadField": "encode.name or encode.category; legacy encode.series when no name/category is supplied",
+      "required": true,
+      "acceptedTypes": [
+        "string"
+      ],
+      "semantics": "ranked bar/item name"
+    },
+    {
+      "channel": "value",
+      "payloadField": "encode.value or encode.y",
+      "required": true,
+      "acceptedTypes": [
+        "number"
+      ],
+      "semantics": "bar length and ranking value"
+    }
+  ],
+  "payloadShape": {
+    "chartName": "dynamic_bar",
+    "title": "string",
+    "unit": "string",
+    "topN": "number",
+    "valueLabel": "string",
+    "timeLabel": "string",
+    "encode": {
+      "time": "string",
+      "name": "string",
+      "value": "string"
+    },
+    "data": "array<object>"
+  },
+  "modelInstructions": [
+    "Use one row per category per frame.",
+    "Do not generate encode.group, encode.color, or a parent classification field.",
+    "Do not show a legend.",
+    "Assign different items different colors from the palette.",
+    "Keep each item's color stable across all frames.",
+    "Keep the number of visible categories readable with topN."
+  ]
+}

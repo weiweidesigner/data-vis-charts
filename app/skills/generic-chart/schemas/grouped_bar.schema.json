@@ -1,0 +1,26 @@
+{
+  "chartType": "grouped-bar",
+  "script": "grouped_bar.py",
+  "purpose": "Compare multiple numeric series across categories.",
+  "rawDataContract": {"shape": "array<object>", "notes": "Rows may be wide or tidy. The model chooses category and grouped numeric fields."},
+  "semanticChannels": [
+    {"channel": "x", "payloadField": "xField", "required": true, "acceptedTypes": ["string", "date", "number"], "semantics": "category or period"},
+    {"channel": "bar.y[]", "payloadField": "series[].field", "required": true, "acceptedTypes": ["number"], "semantics": "multiple comparable measures or groups"},
+    {"channel": "series.label", "payloadField": "series[].label", "required": false, "acceptedTypes": ["string"], "semantics": "legend labels"}
+  ],
+  "payloadShape": {"title": "string", "xField": "string", "data": "array<object>", "series": [{"field": "string", "label": "string"}]},
+  "modelInstructions": [
+    "Use when grouped comparison matters more than time trend.",
+    "Keep grouped series count small enough for readable bars.",
+    "Default x-axis and y-axis tick labels should use 10px font size, matching bar-line charts.",
+    "Place x-axis labels close to the x-axis baseline; default label baseline offset should be around 20px below the plot area, not the older 26px spacing.",
+    "X-axis labels should be displayed in full when measured label widths fit without overlap; only sample labels when full display would overlap, and sample by measured text width plus a small gap instead of fixed first/middle/last rules.",
+    "Hide the legend when the normalized payload contains only one series; show it by default for two or more series.",
+    "When shown, legend styling should match bar-line charts: 10px text, 8px circular markers, compact row gaps, and labels only.",
+    "Include a y-axis description when the metric name is available; use axis.label/title/name/description and place it above the right or left y-axis ticks.",
+    "For right-side y-axes, align the y-axis description to the same right edge as the y-axis tick labels, and allow the description text to extend leftward into the chart area instead of reserving extra right margin.",
+    "Tooltip should sit near the first gridline but not too high; use a compact vertical gap around 10px.",
+    "Do not add viewport or screen safety margins inside the component; component padding and default left/right plot margins should be zero unless needed for axis tick labels or explicit user styling.",
+    "Right-axis tick labels should be measured and right-aligned close to the plot with a small plot-to-label gap."
+  ]
+}

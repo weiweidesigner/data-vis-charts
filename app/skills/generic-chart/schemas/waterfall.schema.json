@@ -1,0 +1,102 @@
+{
+  "type": "waterfall",
+  "name": "waterfall",
+  "visualChannelMappings": [
+    {
+      "semantic": "横轴步骤",
+      "field": "items[].label",
+      "aliases": [
+        "category",
+        "dimension",
+        "name"
+      ],
+      "visualChannel": "xAxis.category",
+      "required": true
+    },
+    {
+      "semantic": "瀑布值",
+      "field": "items[].value",
+      "aliases": [
+        "amount",
+        "delta"
+      ],
+      "visualChannel": "waterfall.bar.height",
+      "required": true
+    },
+    {
+      "semantic": "柱类型",
+      "field": "items[].type",
+      "aliases": [
+        "barType"
+      ],
+      "visualChannel": "waterfall.bar.baseline",
+      "default": "delta",
+      "supportedValues": [
+        "delta",
+        "total"
+      ]
+    },
+    {
+      "semantic": "堆叠到上一柱",
+      "field": "items[].stackWithPrevious",
+      "aliases": [
+        "stack",
+        "stacked"
+      ],
+      "visualChannel": "waterfall.bar.stack",
+      "default": false
+    },
+    {
+      "semantic": "颜色",
+      "field": "items[].color",
+      "aliases": [
+        "fill"
+      ],
+      "visualChannel": "waterfall.bar.color"
+    }
+  ],
+  "dataContract": [
+    {
+      "field": "items[].label",
+      "type": "string",
+      "channel": "legend.label"
+    },
+    {
+      "field": "items[].value",
+      "type": "number",
+      "channel": "waterfall.bar.height"
+    },
+    {
+      "field": "items[].displayValue",
+      "type": "string",
+      "channel": "legend.value"
+    },
+    {
+      "field": "items[].type",
+      "type": "delta|total",
+      "channel": "waterfall.bar.baseline"
+    },
+    {
+      "field": "items[].stackWithPrevious",
+      "type": "boolean",
+      "channel": "waterfall.bar.stack"
+    },
+    {
+      "field": "items[].color",
+      "type": "string",
+      "channel": "waterfall.bar.color"
+    },
+    {
+      "field": "compactItems[]",
+      "type": "array",
+      "channel": "responsive.mobileItems"
+    },
+    {
+      "field": "showLegend",
+      "type": "boolean",
+      "channel": "legend.visibility"
+    }
+  ],
+  "builtInDataSources": [],
+  "script": "waterfall.py"
+}

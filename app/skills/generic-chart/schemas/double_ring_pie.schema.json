@@ -1,0 +1,35 @@
+{
+  "type": "double-ring-pie",
+  "script": "double_ring_pie.py",
+  "purpose": "Compare two related values against one common total using concentric progress rings, with optional summary metrics.",
+  "visualChannelMappings": [
+    {"semantic": "中心文本", "field": "centerLabel", "aliases": ["marketCapLabel", "totalLabel"], "visualChannel": "doubleRing.center.label", "required": true},
+    {"semantic": "基准环", "field": "base", "aliases": ["track", "marketCap"], "visualChannel": "doubleRing.track", "required": true},
+    {"semantic": "双环系列", "field": "rings", "aliases": ["series"], "visualChannel": "doubleRing.arc.progress", "required": true},
+    {"semantic": "底部指标", "field": "metrics", "aliases": ["fields", "keyValues"], "visualChannel": "metricList.items"}
+  ],
+  "payloadShape": {
+    "type": "double-ring-pie",
+    "title": "string",
+    "centerLabel": "string",
+    "base": {"label": "string", "value": "number", "displayValue": "string", "color": "string", "trackColor": "string"},
+    "rings": [{"label": "string", "value": "number", "total": "number", "displayValue": "string", "color": "string"}],
+    "metrics": [{"label": "string", "value": "string"}]
+  },
+  "dataContract": [
+    {"field": "centerLabel", "type": "string", "channel": "doubleRing.center.label"},
+    {"field": "base.label", "type": "string", "channel": "legend.label"},
+    {"field": "base.value", "type": "number", "channel": "doubleRing.track.scale"},
+    {"field": "rings[].label", "type": "string", "channel": "legend.label"},
+    {"field": "rings[].value", "type": "number", "channel": "doubleRing.arc.length"},
+    {"field": "rings[].total", "type": "number", "channel": "doubleRing.arc.scale"},
+    {"field": "metrics[].label", "type": "string", "channel": "metric.label"},
+    {"field": "metrics[].value", "type": "string", "channel": "metric.value"}
+  ],
+  "builtInDataSources": [],
+  "modelInstructions": [
+    "Use only when both rings share the same meaningful total or baseline.",
+    "Do not use for unrelated measures with incompatible denominators.",
+    "Provide no more than two rings; use a standard pie, bar chart, or treemap for larger category sets."
+  ]
+}

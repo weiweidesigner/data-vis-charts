@@ -1,0 +1,133 @@
+{
+  "type": "treemap",
+  "name": "treemap",
+  "visualChannelMappings": [
+    {
+      "semantic": "矩形列表",
+      "field": "items",
+      "aliases": [
+        "data",
+        "nodes",
+        "segments"
+      ],
+      "visualChannel": "treemap.rect.area",
+      "required": true
+    },
+    {
+      "semantic": "分类名称",
+      "field": "items[].label",
+      "aliases": [
+        "name",
+        "category"
+      ],
+      "visualChannel": "treemap.rect.label",
+      "required": true
+    },
+    {
+      "semantic": "面积数值",
+      "field": "items[].value",
+      "aliases": [
+        "size",
+        "amount"
+      ],
+      "visualChannel": "treemap.rect.area",
+      "required": true
+    },
+    {
+      "semantic": "展示值",
+      "field": "items[].displayValue",
+      "aliases": [
+        "formattedValue"
+      ],
+      "visualChannel": "treemap.rect.valueLabel"
+    },
+    {
+      "semantic": "矩形颜色",
+      "field": "items[].color",
+      "aliases": [
+        "fill"
+      ],
+      "visualChannel": "treemap.rect.color"
+    },
+    {
+      "semantic": "子节点",
+      "field": "items[].children",
+      "aliases": [
+        "children",
+        "items"
+      ],
+      "visualChannel": "treemap.hierarchy.children"
+    },
+    {
+      "semantic": "标题",
+      "field": "title",
+      "aliases": [
+        "name"
+      ],
+      "visualChannel": "text.title"
+    },
+    {
+      "semantic": "下标题",
+      "field": "subtitle",
+      "aliases": [
+        "subTitle",
+        "caption"
+      ],
+      "visualChannel": "text.subtitle"
+    },
+    {
+      "semantic": "图例显示",
+      "field": "showLegend",
+      "visualChannel": "legend.visibility",
+      "default": true
+    }
+  ],
+  "dataContract": [
+    {
+      "field": "items[].label",
+      "type": "string",
+      "channel": "treemap.rect.label"
+    },
+    {
+      "field": "items[].value",
+      "type": "number",
+      "channel": "treemap.rect.area"
+    },
+    {
+      "field": "items[].displayValue",
+      "type": "string",
+      "channel": "treemap.rect.valueLabel"
+    },
+    {
+      "field": "items[].color",
+      "type": "string",
+      "channel": "treemap.rect.color"
+    },
+    {
+      "field": "items[].children",
+      "type": "array",
+      "channel": "treemap.hierarchy.children"
+    },
+    {
+      "field": "title",
+      "type": "string",
+      "channel": "text.title"
+    },
+    {
+      "field": "subtitle",
+      "type": "string",
+      "channel": "text.subtitle"
+    },
+    {
+      "field": "height",
+      "type": "number",
+      "channel": "layout.height"
+    },
+    {
+      "field": "showLegend",
+      "type": "boolean",
+      "channel": "legend.visibility"
+    }
+  ],
+  "builtInDataSources": []
+}

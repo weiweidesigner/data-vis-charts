@@ -1,0 +1,256 @@
+{
+  "schemaVersion": "2.0.0",
+  "chartType": "flowchart",
+  "script": "flowchart.py",
+  "purpose": "Render process steps, decisions, system calls, or causal chains with configurable node and edge colors.",
+  "rawDataContract": {
+    "shape": "array<object>|object|string",
+    "notes": "The model maps source content to nodes and directed edges. Color can be assigned automatically from a palette, by node type, or explicitly per node and edge."
+  },
+  "semanticChannels": [
+    {
+      "channel": "node.id",
+      "payloadField": "nodes[].id",
+      "required": true,
+      "acceptedTypes": [
+        "string"
+      ],
+      "semantics": "stable node identifier"
+    },
+    {
+      "channel": "node.label",
+      "payloadField": "nodes[].label",
+      "required": true,
+      "acceptedTypes": [
+        "string"
+      ],
+      "semantics": "visible step or decision label"
+    },
+    {
+      "channel": "node.type",
+      "payloadField": "nodes[].type",
+      "required": false,
+      "acceptedTypes": [
+        "string"
+      ],
+      "acceptedValues": [
+        "process",
+        "decision",
+        "terminal",
+        "input",
+        "database",
+        "subroutine"
+      ],
+      "semantics": "semantic node category used for shape and optional type-based color"
+    },
+    {
+      "channel": "node.colorKey",
+      "payloadField": "nodes[].colorKey",
+      "required": false,
+      "acceptedTypes": [
+        "string"
+      ],
+      "semantics": "references a named style in nodeStyles"
+    },
+    {
+      "channel": "node.colorIndex",
+      "payloadField": "nodes[].colorIndex",
+      "required": false,
+      "acceptedTypes": [
+        "number"
+      ],
+      "semantics": "selects a color from palette by index"
+    },
+    {
+      "channel": "node.style",
+      "payloadField": "nodes[].style",
+      "required": false,
+      "acceptedTypes": [
+        "object"
+      ],
+      "semantics": "per-node visual override for fill, stroke, text color, and stroke width"
+    },
+    {
+      "channel": "edge",
+      "payloadField": "edges[].source/target",
+      "required": true,
+      "acceptedTypes": [
+        "string"
+      ],
+      "semantics": "directed relationship between nodes"
+    },
+    {
+      "channel": "edge.label",
+      "payloadField": "edges[].label",
+      "required": false,
+      "acceptedTypes": [
+        "string"
+      ],
+      "semantics": "visible relationship label"
+    },
+    {
+      "channel": "edge.style",
+      "payloadField": "edges[].style",
+      "required": false,
+      "acceptedTypes": [
+        "object"
+      ],
+      "semantics": "per-edge visual override for line color, label color, width, and dash pattern"
+    }
+  ],
+  "colorContract": {
+    "colorMode": {
+      "payloadField": "colorMode",
+      "acceptedValues": [
+        "byOrder",
+        "byType",
+        "custom",
+        "single"
+      ],
+      "default": "byOrder",
+      "semantics": {
+        "byOrder": "Assign palette styles to nodes in sequence and cycle when needed.",
+        "byType": "Assign styles using nodeStyles[type].",
+        "custom": "Prefer nodes[].style or nodes[].colorKey; fall back to the palette.",
+        "single": "Use defaultNodeStyle for every node."
+      }
+    },
+    "palette": {
+      "payloadField": "palette",
+      "acceptedTypes": [
+        "array<object>"
+      ],
+      "notes": "Each palette item should define fillColor, strokeColor, and textColor."
+    },
+    "nodeStyles": {
+      "payloadField": "nodeStyles",
+      "acceptedTypes": [
+        "object"
+      ],
+      "notes": "Named reusable styles. Keys may be node types or custom color keys."
+    },
+    "priority": [
+      "nodes[].style",
+      "nodes[].colorKey -> nodeStyles[colorKey]",
+      "colorMode rule",
+      "defaultNodeStyle"
+    ]
+  },
+  "payloadShape": {
+    "title": "string",
+    "direction": "LR|RL|TB|TD|BT",
+    "colorMode": "byOrder|byType|custom|single",
+    "palette": [
+      {
+        "fillColor": "#EFF6FF",
+        "strokeColor": "#60A5FA",
+        "textColor": "#172554"
+      },
+      {
+        "fillColor": "#ECFDF5",
+        "strokeColor": "#34D399",
+        "textColor": "#064E3B"
+      },
+      {
+        "fillColor": "#FFF7ED",
+        "strokeColor": "#FB923C",
+        "textColor": "#431407"
+      },
+      {
+        "fillColor": "#F5F3FF",
+        "strokeColor": "#A78BFA",
+        "textColor": "#2E1065"
+      },
+      {
+        "fillColor": "#FDF2F8",
+        "strokeColor": "#F472B6",
+        "textColor": "#500724"
+      },
+      {
+        "fillColor": "#F0FDFA",
+        "strokeColor": "#2DD4BF",
+        "textColor": "#134E4A"
+      }
+    ],
+    "defaultNodeStyle": {
+      "fillColor": "#F8FAFC",
+      "strokeColor": "#94A3B8",
+      "textColor": "#0F172A",
+      "strokeWidth": 1.5
+    },
+    "nodeStyles": {
+      "process": {
+        "fillColor": "#EFF6FF",
+        "strokeColor": "#60A5FA",
+        "textColor": "#172554"
+      },
+      "decision": {
+        "fillColor": "#FFF7ED",
+        "strokeColor": "#FB923C",
+        "textColor": "#431407"
+      },
+      "terminal": {
+        "fillColor": "#ECFDF5",
+        "strokeColor": "#34D399",
+        "textColor": "#064E3B"
+      },
+      "input": {
+        "fillColor": "#F5F3FF",
+        "strokeColor": "#A78BFA",
+        "textColor": "#2E1065"
+      },
+      "database": {
+        "fillColor": "#FDF2F8",
+        "strokeColor": "#F472B6",
+        "textColor": "#500724"
+      },
+      "subroutine": {
+        "fillColor": "#F8FAFC",
+        "strokeColor": "#94A3B8",
+        "textColor": "#0F172A"
+      }
+    },
+    "nodes": [
+      {
+        "id": "string",
+        "label": "string",
+        "type": "process|decision|terminal|input|database|subroutine",
+        "colorKey": "string",
+        "colorIndex": "number",
+        "style": {
+          "fillColor": "#RRGGBB",
+          "strokeColor": "#RRGGBB",
+          "textColor": "#RRGGBB",
+          "strokeWidth": "number"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "string",
+        "target": "string",
+        "label": "string",
+        "style": {
+          "lineColor": "#RRGGBB",
+          "labelColor": "#RRGGBB",
+          "lineWidth": "number",
+          "dash": "solid|dashed|dotted"
+        }
+      }
+    ]
+  },
+  "modelInstructions": [
+    "Use short node labels.",
+    "Make direction explicit and avoid cycles unless the source process is cyclic.",
+    "Default colorMode to byOrder so adjacent nodes do not all use the same blue style.",
+    "Use visually distinct but harmonious palette colors and keep sufficient text contrast.",
+    "Use byType when node semantics are more important than sequence.",
+    "Use custom only when the source explicitly implies categories, status, risk, ownership, or emphasis.",
+    "Do not assign colors randomly when they carry semantic meaning.",
+    "When a node defines style, do not overwrite it with palette or type colors.",
+    "Keep edge colors neutral by default unless the edge encodes status or meaning."
+  ],
+  "backwardCompatibility": {
+    "notes": "Existing payloads containing only title, nodes, and edges remain valid. When no color fields are supplied, the renderer should use colorMode=byOrder and the default palette."
+  }
+}

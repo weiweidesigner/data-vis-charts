@@ -1,0 +1,13 @@
+{
+  "chartType": "timeline",
+  "script": "timeline.py",
+  "purpose": "Render dated events or milestones in chronological order.",
+  "rawDataContract": {"shape": "array<object>", "notes": "Rows should include a date/period field and an event/label field."},
+  "semanticChannels": [
+    {"channel": "time", "payloadField": "items[].date or events[].date", "required": true, "acceptedTypes": ["date", "string"], "semantics": "event date or period"},
+    {"channel": "event.label", "payloadField": "items[].title or events[].title", "required": true, "acceptedTypes": ["string"], "semantics": "event or milestone name"},
+    {"channel": "event.detail", "payloadField": "items[].description or events[].description", "required": false, "acceptedTypes": ["string"], "semantics": "short supporting detail"}
+  ],
+  "payloadShape": {"title": "string", "items": [{"date": "string", "title": "string", "description": "string"}]},
+  "modelInstructions": ["Sort events chronologically.", "Use concrete dates when available."]
+}

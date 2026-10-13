@@ -1,0 +1,41 @@
+{
+  "chartType": "bar-line",
+  "script": "bar_line.py",
+  "purpose": "Show one or more scale metrics as bars with one or more rate/change metrics as lines on a shared x-axis.",
+  "rawDataContract": {
+    "shape": "array<object>",
+    "notes": "Raw rows may use any key names. The model must infer semantic field roles from the user request, field names, values, and units."
+  },
+  "semanticChannels": [
+    {"channel": "x", "payloadField": "xField", "required": true, "acceptedTypes": ["string", "date", "number"], "semantics": "category, period, date, quarter, month, year"},
+    {"channel": "bar.y", "payloadField": "columnSeries[].field", "required": true, "acceptedTypes": ["number"], "semantics": "volume, count, revenue, amount, value, absolute scale metric"},
+    {"channel": "line.y", "payloadField": "lineSeries[].field", "required": true, "acceptedTypes": ["number"], "semantics": "rate, ratio, margin, conversion, growth, return, percentage"},
+    {"channel": "bar.label", "payloadField": "columnSeries[].label", "required": false, "acceptedTypes": ["string"], "semantics": "reader-facing bar series name"},
+    {"channel": "line.label", "payloadField": "lineSeries[].label", "required": false, "acceptedTypes": ["string"], "semantics": "reader-facing line series name"},
+    {"channel": "axis.left", "payloadField": "leftAxis", "required": false, "acceptedTypes": ["object"], "semantics": "line axis scale, metric name, suffix, digits"},
+    {"channel": "axis.right", "payloadField": "rightAxis", "required": false, "acceptedTypes": ["object"], "semantics": "bar axis scale, metric name, suffix, digits"}
+  ],
+  "payloadShape": {
+    "type": "bar-line",
+    "title": "string",
+    "xField": "string",
+    "data": "array<object>",
+    "columnSeries": [{"field": "string", "label": "string", "suffix": "string"}],
+    "lineSeries": [{"field": "string", "label": "string", "suffix": "string"}],
+    "leftAxis": {"label": "string", "description": "string", "title": "string", "name": "string", "axisLabel": "string", "suffix": "string", "digits": "number"},
+    "rightAxis": {"label": "string", "description": "string", "title": "string", "name": "string", "axisLabel": "string", "suffix": "string", "digits": "number"}
+  },
+  "modelInstructions": [
+    "Keep numeric values numeric. Put units in suffix, label, displayValue, or axis configuration.",
+    "Prefer bars for absolute magnitude metrics and lines for percentage/rate metrics.",
+    "If the user supplies multiple candidate metrics, select the smallest set needed for the requested comparison.",
+    "Default x-axis and y-axis tick labels should use 10px font size, matching grouped-line charts.",
+    "Place x-axis labels close to the x-axis baseline; default label baseline offset should be around 20px below the plot area, not the older 26px spacing.",
+    "X-axis labels should be displayed in full when measured label widths fit without overlap; only sample labels when full display would overlap, and sample by measured text width plus a small gap instead of fixed first/middle/last rules.",
+    "Default legend styling should match grouped-line charts: 10px text, 8px circular markers, compact row gaps, and labels only.",
+    "Show y-axis descriptions when provided. Use leftAxis.label/description/title/name/axisLabel for the left line axis and rightAxis.label/description/title/name/axisLabel for the right bar axis.",
+    "For right-side y-axes, align the y-axis description to the same right edge as the y-axis tick labels, and allow the description text to extend leftward into the chart area instead of reserving extra right margin.",
+    "Right-axis tick labels should be measured and right-aligned close to the plot with a small plot-to-label gap, avoiding extra safety padding on the far right.",
+    "Do not add viewport or screen safety margins inside the component; component padding and default left/right plot margins should be zero unless needed for axis tick labels or explicit user styling."
+  ]
+}

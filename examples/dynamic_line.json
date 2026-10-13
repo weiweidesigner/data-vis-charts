@@ -1,0 +1,42 @@
+{
+  "chartName": "dynamic_line",
+  "title": "销售趋势",
+  "theme": "light",
+  "encode": {
+    "x": "month",
+    "y": "value",
+    "series": "region"
+  },
+  "data": [
+    {
+      "month": "2026-01",
+      "region": "华东",
+      "value": 100
+    },
+    {
+      "month": "2026-01",
+      "region": "华南",
+      "value": 80
+    },
+    {
+      "month": "2026-02",
+      "region": "华东",
+      "value": 140
+    },
+    {
+      "month": "2026-02",
+      "region": "华南",
+      "value": 110
+    },
+    {
+      "month": "2026-03",
+      "region": "华东",
+      "value": 160
+    },
+    {
+      "month": "2026-03",
+      "region": "华南",
+      "value": 130
+    }
+  ]
+}

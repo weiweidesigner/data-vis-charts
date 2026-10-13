@@ -1,0 +1,13 @@
+{
+  "chartType": "dynamic-line",
+  "script": "dynamic_line.py",
+  "purpose": "Show playable time-series progression for one or more series.",
+  "rawDataContract": {"shape": "array<object>", "notes": "Preferred tidy rows with x/time, series/name, and value fields."},
+  "semanticChannels": [
+    {"channel": "x", "payloadField": "encode.x", "required": true, "acceptedTypes": ["date", "string", "number"], "semantics": "time or ordered frame"},
+    {"channel": "series", "payloadField": "encode.series", "required": true, "acceptedTypes": ["string"], "semantics": "line/entity/group name"},
+    {"channel": "y", "payloadField": "encode.y", "required": true, "acceptedTypes": ["number"], "semantics": "numeric value at each frame"}
+  ],
+  "payloadShape": {"chartName": "dynamic_line", "title": "string", "unit": "string", "theme": "light|dark", "encode": {"x": "string", "series": "string", "y": "string"}, "data": "array<object>"},
+  "modelInstructions": ["Prefer tidy long data: one row per series per x value.", "Sort x chronologically and keep values numeric."]
+}

@@ -1,0 +1,33 @@
+{
+  "chartType": "bar",
+  "script": "bar_chart.py",
+  "purpose": "Compare one numeric measure across categories or ordered periods.",
+  "rawDataContract": {"shape": "array<object>", "notes": "Rows can use arbitrary key names."},
+  "semanticChannels": [
+    {"channel": "x", "payloadField": "xField", "required": true, "acceptedTypes": ["string", "date", "number"], "semantics": "category, period, group, bucket"},
+    {"channel": "bar.y", "payloadField": "yField or series[].field", "required": true, "acceptedTypes": ["number"], "semantics": "single numeric measure represented by bar height"},
+    {"channel": "bar.label", "payloadField": "series[].label or title", "required": false, "acceptedTypes": ["string"], "semantics": "reader-facing measure name"}
+  ],
+  "payloadShape": {
+    "title": "string",
+    "xField": "string",
+    "yField": "string",
+    "series": [{"field": "string", "label": "string"}],
+    "axis": {"label": "string", "description": "string", "title": "string", "name": "string", "axisLabel": "string", "suffix": "string", "digits": "number", "position": "right"},
+    "data": "array<object>"
+  },
+  "modelInstructions": [
+    "Use for one primary numeric measure.",
+    "Sort periods chronologically and categories by user intent or value when appropriate.",
+    "Default x-axis and y-axis tick labels should use 10px font size, matching grouped-bar charts.",
+    "Place x-axis labels close to the x-axis baseline; default label baseline offset should be around 20px below the plot area, not the older 26px spacing.",
+    "Hide the legend by default for a single-series bar chart because the y-axis description and tooltip already identify the measure. Show it only when legend.visible is explicitly true.",
+    "When a legend is explicitly shown, its styling should match grouped-bar charts: 10px text, 8px circular markers, compact row gaps, and labels only.",
+    "Tooltip should match grouped-bar charts: compact 10px text, 6px 8px padding, 220px max width, and a vertical gap around 10px.",
+    "Show a y-axis description when provided. Use axis.label/description/title/name/axisLabel and place it above the right y-axis ticks.",
+    "For right-side y-axes, align the y-axis description to the same right edge as the y-axis tick labels, and allow the description text to extend leftward into the chart area instead of reserving extra right margin.",
+    "Right-axis tick labels should be measured and right-aligned close to the plot with a small plot-to-label gap.",
+    "X-axis labels should be displayed in full when measured label widths fit without overlap; only sample labels when full display would overlap, and sample by measured text width plus a small gap instead of fixed count rules.",
+    "Do not add viewport or screen safety margins inside the component; component padding and default left/right plot margins should be zero unless needed for axis tick labels or explicit user styling."
+  ]
+}

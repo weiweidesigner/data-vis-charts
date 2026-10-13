@@ -1,0 +1,16 @@
+{
+  "chartType": "dynamic-bubble",
+  "script": "dynamic_bubble.py",
+  "purpose": "Show animated observations with x, y, size, and optional color/group dimensions.",
+  "rawDataContract": {"shape": "array<object>", "notes": "Rows should include frame/time plus numeric x, numeric y, and numeric size."},
+  "semanticChannels": [
+    {"channel": "frame", "payloadField": "encode.time", "required": true, "acceptedTypes": ["date", "string", "number"], "semantics": "animation frame"},
+    {"channel": "x", "payloadField": "encode.x", "required": true, "acceptedTypes": ["number"], "semantics": "horizontal numeric metric"},
+    {"channel": "y", "payloadField": "encode.y", "required": true, "acceptedTypes": ["number"], "semantics": "vertical numeric metric"},
+    {"channel": "size", "payloadField": "encode.size", "required": true, "acceptedTypes": ["number"], "semantics": "bubble magnitude"},
+    {"channel": "name", "payloadField": "encode.name", "required": false, "acceptedTypes": ["string"], "semantics": "observation label"},
+    {"channel": "color", "payloadField": "encode.color", "required": false, "acceptedTypes": ["string"], "semantics": "optional group or segment. Omit this channel when the data has no meaningful category or only one category."}
+  ],
+  "payloadShape": {"chartName": "dynamic_bubble", "title": "string", "encode": {"time": "string", "x": "string", "y": "string", "size": "string", "name": "string", "color": "string optional"}, "data": "array<object>"},
+  "modelInstructions": ["Use one row per observation per frame.", "Choose interpretable numeric metrics for both axes.", "Do not invent encode.color for ungrouped data. If color is omitted or resolves to only one category, the renderer hides the legend and colors bubbles sequentially from the palette."]
+}

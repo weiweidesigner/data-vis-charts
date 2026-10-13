@@ -1,0 +1,12 @@
+{
+  "chartType": "journey",
+  "script": "journey.py",
+  "purpose": "Render staged user, customer, product, or business journeys.",
+  "rawDataContract": {"shape": "array<object>|object|string", "notes": "The model maps source information into ordered stages with actions, touchpoints, pain points, or outcomes."},
+  "semanticChannels": [
+    {"channel": "stage", "payloadField": "stages[].title", "required": true, "acceptedTypes": ["string"], "semantics": "ordered journey phase"},
+    {"channel": "step.detail", "payloadField": "stages[].items[]", "required": false, "acceptedTypes": ["string"], "semantics": "actions, thoughts, touchpoints, pain points, outcomes"}
+  ],
+  "payloadShape": {"title": "string", "stages": [{"title": "string", "items": ["string"]}]},
+  "modelInstructions": ["Use 4-7 stages unless the user specifies otherwise.", "Keep each item short and action-oriented."]
+}

@@ -1,0 +1,42 @@
+{
+  "chartType": "group-line",
+  "script": "group_line.py",
+  "purpose": "Compare multiple numeric series over the same ordered x-axis.",
+  "rawDataContract": {"shape": "array<object>", "notes": "Rows may be wide or tidy. Convert tidy rows to the payload style expected by the script if needed."},
+  "semanticChannels": [
+    {"channel": "x", "payloadField": "xField", "required": true, "acceptedTypes": ["date", "string", "number"], "semantics": "time, period, ordered category"},
+    {"channel": "line.y[]", "payloadField": "series[].field", "required": true, "acceptedTypes": ["number"], "semantics": "multiple comparable numeric measures or entities"},
+    {"channel": "series.label", "payloadField": "series[].label", "required": false, "acceptedTypes": ["string"], "semantics": "reader-facing series names"},
+    {"channel": "yAxis.name", "payloadField": "rightAxis.label", "required": false, "acceptedTypes": ["string"], "semantics": "reader-facing y-axis description or metric name, such as 累计收益率; ordinary grouped-line charts should use the right y-axis only"}
+  ],
+  "payloadShape": {
+    "type": "group-line",
+    "title": "string",
+    "xField": "string",
+    "data": "array<object>",
+    "series": [{"field": "string", "label": "string", "axis": "right"}],
+    "leftAxis": {"visible": false},
+    "rightAxis": {"label": "string", "digits": "number", "min": "number", "max": "number", "includeZero": "boolean", "visible": true},
+    "visualStyle": {
+      "yAxis": {"position": "right"},
+      "tooltip": {"showUnit": false},
+      "positionLine": {"visible": true, "color": "string", "opacity": "number", "width": "number", "dasharray": "string"}
+    }
+  },
+  "modelInstructions": [
+    "Use no more than 6-8 visible series unless the user explicitly asks.",
+    "For ordinary grouped-line examples, bind every series to axis='right', set leftAxis.visible=false, set rightAxis.visible=true, and set visualStyle.yAxis.position='right'.",
+    "For event-window cumulative-return charts with xField day/window_day/relative_day, provide one row for every integer day in the window and forward-fill weekends/holidays. If early non-trading days are missing, use 0 until the first trading-day return appears.",
+    "The renderer defaults visualStyle.line.connectNulls=true as a safety net, but source payloads should still repair breakpoints in data rather than relying only on rendering.",
+    "Put the metric name in rightAxis.label. Do not set series[].suffix, leftAxis.suffix, or rightAxis.suffix unless the user explicitly asks for units on visible values.",
+    "Do not set leftAxis.min/max or rightAxis.min/max unless the user explicitly requests fixed axis bounds. Let the renderer derive a readable domain from the actual data.",
+    "If units are semantically important, mention them in surrounding prose or the axis label text only when requested; do not append units to y-axis tick labels or legend/tooltip values by default.",
+    "Use a second axis only when the user explicitly asks for dual-axis comparison or the series have incompatible scales.",
+    "Tooltip positioning must clamp to both viewport edges; at the first x point, keep the tooltip fully visible instead of allowing its left side to be clipped.",
+    "The tooltip arrow should visually attach to the tooltip body with a slight overlap, and its tip must align with the vertical position line even when the tooltip is clamped at the viewport edge.",
+    "On small screens, compute tooltip anchor coordinates from the rendered SVG screen position, not only from unscaled SVG/viewBox coordinates.",
+    "When the tooltip is clamped at the left or right viewport boundary and the arrow tip would sit on the tooltip edge, hide the arrow instead of showing a clipped or detached triangle.",
+    "For right-side y-axes, align the y-axis description to the same right edge as the y-axis tick labels, and allow the description text to extend leftward into the chart area instead of reserving extra right margin.",
+    "For a framed two-line event annotation, use visualStyle.overlays[] with type='pointMarkers', x or index, labelBox=true, eventTime for the first line, and eventTitle for the second line. Preserve all base grouped-line defaults unless the user explicitly requests a visual override."
+  ]
+}

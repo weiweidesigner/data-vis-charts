@@ -1,0 +1,68 @@
+{
+  "chartType": "line",
+  "script": "line_chart.py",
+  "purpose": "Show one numeric measure over ordered time or sequence. This script is a single-series copy-derived variant of group_line.py, so its axis, legend, tooltip, hover, spacing, and visualStyle behavior should match grouped-line charts.",
+  "implementation": {
+    "renderer": "line_chart.py",
+    "source": "copied from group_line.py",
+    "seriesLimit": 1,
+    "notes": "Generate a normal line payload. The script keeps the group_line rendering implementation in this file but normalizes to exactly one visible line series."
+  },
+  "cliArgs": ["--payload", "--data-json", "--data", "--title", "--style-json", "--style-code", "--style-file", "--output", "--payload-output", "--schema"],
+  "rawDataContract": {"shape": "array<object>", "notes": "Rows can use arbitrary key names."},
+  "semanticChannels": [
+    {"channel": "x", "payloadField": "xField", "required": true, "acceptedTypes": ["date", "string", "number"], "semantics": "time, period, ordered sequence"},
+    {"channel": "line.y", "payloadField": "yField or series[0].field", "required": true, "acceptedTypes": ["number"], "semantics": "numeric trend measure"},
+    {"channel": "series.label", "payloadField": "series[0].label", "required": false, "acceptedTypes": ["string"], "semantics": "reader-facing legend and tooltip name"},
+    {"channel": "rightAxis", "payloadField": "axis or rightAxis", "required": false, "acceptedTypes": ["object"], "semantics": "default visible y-axis for the single line"}
+  ],
+  "payloadShape": {
+    "type": "line",
+    "title": "string",
+    "xField": "string",
+    "yField": "string",
+    "series": [{"field": "string", "label": "string", "axis": "right"}],
+    "leftAxis": {"visible": false},
+    "rightAxis": {"label": "string", "digits": "number", "includeZero": "boolean", "visible": true},
+    "visualStyle": {
+      "yAxis": {"position": "right"},
+      "tooltip": {"showUnit": false},
+      "positionLine": {"visible": true, "color": "string", "opacity": "number", "width": "number", "dasharray": "string"}
+    },
+    "data": "array<object>"
+  },
+  "styleContract": {
+    "visualStyle": {
+      "container": "background, color, padding, borderRadius, fontFamily, className",
+      "title": "visible, text, color, fontSize, fontWeight, lineHeight, margin",
+      "chart": "background, minWidth, height",
+      "margin": "top, right, bottom, left",
+      "grid": "visible, count, color, width, dasharray, opacity",
+      "xAxis": "visible, color, fontSize, fontWeight, labelEvery, labelAngle, lineColor, lineWidth",
+      "yAxis": "position(left|right|both), suffix, digits, color, fontSize, fontWeight, lineColor, lineWidth",
+      "leftAxis/rightAxis": "min, max, suffix, digits, includeZero, visible",
+      "line": "showPoints, strokeWidth, curve(straight|smooth), dasharray, opacity, strokeLinecap, strokeLinejoin",
+      "point": "visible, radius, outerRadius, fill, strokeWidth",
+      "seriesStyle": "field/series/name/label, color, strokeWidth, opacity, dasharray, showPoints, pointRadius, axis",
+      "legend": "visible, position(top|bottom), align, gap, color, fontSize, markerSize, markerShape; labels show series names only",
+      "tooltip": "visible, placement(cursor|fixed|topGrid|aboveFirstGrid), background, color, borderRadius, padding, fontSize, maxWidth, arrow, showUnit",
+      "hover": "bandColor, bandOpacity",
+      "positionLine": "visible, color, opacity, width, dasharray; vertical x-position guide shown on hover",
+      "overlays": "referenceLine, selectedBand, thresholdMarkers, pointMarkers; pointMarkers supports labelBox, eventTime, eventTitle, labelPosition(top|bottom), labelBackground, borderColor, labelBorderRadius, connectorColor",
+      "customCss": "raw CSS appended inside this component"
+    }
+  },
+  "modelInstructions": [
+    "Use only when the x dimension has meaningful order.",
+    "Sort x chronologically before rendering.",
+    "Provide exactly one numeric series. Prefer series[0].field plus series[0].label so legend and tooltip display a reader-facing name.",
+    "Use right-axis defaults unless the user explicitly asks for the y-axis on the left or both sides.",
+    "Set series[0].axis='right', leftAxis.visible=false, rightAxis.visible=true, and visualStyle.yAxis.position='right' by default.",
+    "Put the metric name in rightAxis.label. Do not set series[0].suffix, axis.suffix, or rightAxis.suffix unless the user explicitly asks visible values to show units.",
+    "Use visualStyle.tooltip.showUnit=false and visualStyle.positionLine.visible=true by default.",
+    "Y-axis tick and tooltip compact-unit conversion must follow grouped-line behavior: only convert when all values in the axis or tooltip group meet the same magnitude threshold.",
+    "Tooltip boundary behavior must follow grouped-line behavior: clamp to both viewport edges, compute anchors from rendered SVG screen coordinates on small screens, align the arrow tip with the vertical position line, and hide the arrow when it would sit on the tooltip edge.",
+    "For right-side y-axes, align the y-axis description to the same right edge as the y-axis tick labels, and allow the description text to extend leftward into the chart area instead of reserving extra right margin.",
+    "For a framed two-line event annotation, use visualStyle.overlays[] with type='pointMarkers', x or index, labelBox=true, eventTime for the first line, and eventTitle for the second line. Preserve all base line-chart defaults unless the user explicitly requests a visual override."
+  ]
+}
