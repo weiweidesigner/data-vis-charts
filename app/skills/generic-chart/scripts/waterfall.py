@@ -200,13 +200,13 @@ def render_document(payload: dict[str, Any]) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{title}</title>
 <style>
-:root{{color-scheme:light;--business-bg-fff:#fff;--business-text-171717:#171717;--business-text-1a1a1a:#1a1a1a;--business-bg-f1f1f1:#f1f1f1;--business-border-ececec:#ececec;--business-border-606060:#606060;--business-text-f7f7f7:#f7f7f7;--business-bg-3a3a3a:#3a3a3a;--business-text-fff:#fff;--business-bg-e8e8e8:#e8e8e8;--business-border-3a3a3a:#3a3a3a;}}
-:root[data-theme="dark"]{{color-scheme:dark;--business-bg-fff:#202b3a;--business-text-171717:#e8edf5;--business-text-1a1a1a:#e8edf5;--business-bg-f1f1f1:#202b3a;--business-border-ececec:#293646;--business-border-606060:#566477;--business-text-f7f7f7:#f5f7fb;--business-bg-3a3a3a:#263242;--business-text-fff:#f5f7fb;--business-bg-e8e8e8:#293648;--business-border-3a3a3a:#566477;}}
+:root{{color-scheme:light;--business-bg-fff:#fff;--business-text-171717:#171717;--business-text-1a1a1a:#1a1a1a;--business-text-secondary:#5f6876;--business-bg-f1f1f1:#f1f1f1;--business-border-ececec:#ececec;--business-border-606060:#606060;--business-text-f7f7f7:#f7f7f7;--business-bg-3a3a3a:#3a3a3a;--business-text-fff:#fff;--business-bg-e8e8e8:#e8e8e8;--business-border-3a3a3a:#3a3a3a;}}
+:root[data-theme="dark"]{{color-scheme:dark;--business-bg-fff:#181e28;--business-text-171717:#f1f5f9;--business-text-1a1a1a:#f1f5f9;--business-text-secondary:#c1cad7;--business-bg-f1f1f1:#202733;--business-border-ececec:#2b3544;--business-border-606060:#334052;--business-text-f7f7f7:#f1f5f9;--business-bg-3a3a3a:#202733;--business-text-fff:#f1f5f9;--business-bg-e8e8e8:#2b3544;--business-border-3a3a3a:#334052;}}
 
 *{{box-sizing:border-box}}
-html,body{{width:100%;height:100%;margin:0;background:var(--business-bg-fff)}}
+html,body{{width:100%;height:100%;margin:0;background:transparent}}
 body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0;color:var(--business-text-171717)}}
-.waterfall-component{{position:relative;width:100%;min-height:{config["height"]}px;padding:14px 28px 14px;background:var(--business-bg-fff);overflow:visible}}
+.waterfall-component{{position:relative;width:100%;min-height:{config["height"]}px;padding:14px 28px 14px;background:transparent;overflow:visible}}
 .waterfall-title{{height:24px;margin:0 0 6px;font-size:16px;font-weight:800;line-height:1.2}}
 .waterfall-tabs{{position:absolute;z-index:4;top:8px;right:28px;display:flex;gap:10px;align-items:center;font-size:15px}}
 .waterfall-tab{{appearance:none;border:0;background:transparent;padding:8px 12px;border-radius:8px;color:var(--business-text-1a1a1a);font:inherit;font-weight:500;line-height:1;cursor:pointer}}
@@ -226,7 +226,7 @@ svg{{display:block;width:100%;height:100%;overflow:visible}}
 .tooltip-row{{display:flex;justify-content:space-between;align-items:center;gap:18px;white-space:nowrap}}
 .tooltip-label{{display:flex;align-items:center;gap:7px;color:var(--business-text-fff)}}
 .tooltip-dot,.legend-dot{{width:9px;height:9px;border-radius:50%;flex:none}}
-.waterfall-legend{{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 20px;margin-top:18px;padding-bottom:8px;font-size:14px;line-height:1.2}}
+.waterfall-legend{{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 20px;margin-top:18px;padding-bottom:8px;color:var(--business-text-secondary);font-size:14px;line-height:1.2}}
 .waterfall-component.hide-legend .waterfall-layout{{grid-template-columns:1fr}}
 .waterfall-component.hide-legend .waterfall-legend{{display:none}}
 .legend-separator{{grid-column:1/-1;height:1px;background:var(--business-bg-e8e8e8);margin:-2px 0 0}}

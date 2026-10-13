@@ -21,6 +21,8 @@ python app/skills/generic-chart/scripts/dynamic_line.py --payload examples/dynam
 
 生成 HTML 可在浏览器打开或通过 iframe 嵌入。部分图表使用 CDN 上的 ECharts、D3、Mermaid 或字体，首次显示需要网络。动态折线的 Python 渲染器及音乐资源已内置，无需本机 Codex Skill。
 
+基础图表的暗夜模式遵循 StreamViz 语义色板：透明图表背景、`#f1f5f9` 主文字、`#c1cad7` 次文字、`#2b3544` 弱分隔线，以及适合暗色背景的高明度系列色。组件接受 payload 中的 `theme: "dark"` / `themeMode: "dark"`，也会响应宿主 URL 的 `?theme=dark`。
+
 ## 组件
 
 | 类型 | 脚本 |

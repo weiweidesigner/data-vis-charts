@@ -178,6 +178,9 @@ def _normalize_line_payload(payload: dict[str, Any], title: str | None = None, s
     normalized = {
         "type": "group-line",
         "chartType": "grouped-line",
+        "themeMode": str(
+            props.get("themeMode") or props.get("theme") or source.get("themeMode") or source.get("theme") or "light"
+        ).lower(),
         "title": str(title or source.get("title") or props.get("title") or "折线图"),
         "subtitle": str(source.get("subtitle") or props.get("subtitle") or ""),
         "xField": x_field,

@@ -185,7 +185,7 @@ def render_document(payload: dict[str, Any]) -> str:
 <title>pie</title>
 <style>
 :root{{color-scheme:light;--business-text-151922:#151922;--business-text-687386:#687386;--business-text-fff:#fff;--business-text-4b5563:#4b5563;}}
-:root[data-theme="dark"]{{color-scheme:dark;--business-text-151922:#e8edf5;--business-text-687386:#a8b3c4;--business-text-fff:#f5f7fb;--business-text-4b5563:#a8b3c4;}}
+:root[data-theme="dark"]{{color-scheme:dark;--business-text-151922:#f1f5f9;--business-text-687386:#c1cad7;--business-text-fff:#f1f5f9;--business-text-4b5563:#c1cad7;}}
 
 *{{box-sizing:border-box}}
 html,body{{width:100%;min-height:0;margin:0;background:transparent}}

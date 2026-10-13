@@ -704,6 +704,9 @@ def _normalize_config(payload: dict[str, Any], title: str | None = None, style: 
     return {
         "type": COMPONENT_TYPE,
         "chartType": "grouped-line",
+        "themeMode": str(
+            props.get("themeMode") or props.get("theme") or source.get("themeMode") or source.get("theme") or "light"
+        ).lower(),
         "title": str(title or source.get("title") or props.get("title") or "分组折线图"),
         "subtitle": str(source.get("subtitle") or props.get("subtitle") or ""),
         "xField": x_field,
@@ -724,38 +727,42 @@ def render_document(payload: dict[str, Any], title: str | None = None, style: di
     config_json = json.dumps(config, ensure_ascii=False).replace("</", "<\\/")
     page_title = html.escape(config["title"] or "分组折线图")
     contract = html.escape(json.dumps(component_schema(), ensure_ascii=False), quote=True)
+    theme_mode = "dark" if config.get("themeMode") == "dark" else "light"
     return f"""<!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="{theme_mode}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{page_title}</title>
+<script>(() => {{ const theme = new URLSearchParams(location.search).get('theme'); if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme; }})();</script>
 <style>
 *{{box-sizing:border-box}}
+:root{{--chart-text-primary:#171b22;--chart-text-secondary:#5f6876;--chart-text-muted:#8b94a2;--chart-border-subtle:#edf0f4;--chart-border-default:#a3a8b0;--chart-surface-muted:#f1f1f1;--chart-point-fill:#fff;--chart-tooltip-bg:rgba(59,59,59,.96)}}
+:root[data-theme="dark"]{{color-scheme:dark;--chart-text-primary:#f1f5f9;--chart-text-secondary:#c1cad7;--chart-text-muted:#93a0b3;--chart-border-subtle:#2b3544;--chart-border-default:#334052;--chart-surface-muted:#202733;--chart-point-fill:#181e28;--chart-tooltip-bg:#202733}}
 html,body{{width:100%;min-height:100%;margin:0;overflow:visible}}
-body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0;background:transparent;color:#171717;overflow:visible}}
-.group-line-component{{position:relative;width:100%;container-type:inline-size;min-height:0;height:auto;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none;color:#171717;overflow:visible}}
+body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0;background:transparent;color:var(--chart-text-primary);overflow:visible}}
+.group-line-component{{position:relative;width:100%;container-type:inline-size;min-height:0;height:auto;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none;color:var(--chart-text-primary);overflow:visible}}
 .chart-title{{min-height:22px;max-height:42px;margin:0;font-size:16px;font-weight:800;line-height:1.25;color:inherit;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}}
-.chart-subtitle{{margin:3px 0 0;color:#667085;font-size:12px;line-height:1.35}}
+.chart-subtitle{{margin:3px 0 0;color:var(--chart-text-secondary);font-size:12px;line-height:1.35}}
 .chart-tabs{{position:absolute;z-index:3;top:8px;right:18px;display:flex;align-items:center;gap:4px}}
-.chart-tab{{appearance:none;border:0;background:transparent;color:#404040;height:34px;min-width:56px;padding:0 12px;border-radius:8px;font:inherit;font-size:13px;cursor:pointer}}
-.chart-tab[aria-selected="true"]{{background:#f1f1f1;color:#171717;font-weight:800}}
+.chart-tab{{appearance:none;border:0;background:transparent;color:var(--chart-text-secondary);height:34px;min-width:56px;padding:0 12px;border-radius:8px;font:inherit;font-size:13px;cursor:pointer}}
+.chart-tab[aria-selected="true"]{{background:var(--chart-surface-muted);color:var(--chart-text-primary);font-weight:800}}
 .chart-stage{{position:relative;width:100%;height:calc(clamp(340px,calc(100cqw / 2.8),{config["height"]}px) - 82px);min-height:220px;margin-top:4px;overflow:visible}}
 svg{{display:block;width:100%;height:100%;overflow:visible}}
-.grid-line{{stroke:#e8e8e8;stroke-width:1}}
-.axis-line{{stroke:#a3a8b0;stroke-width:1}}
-.axis-label{{fill:#747474;font-size:10px;font-weight:400}}
-.x-label{{fill:#666;font-size:10px;font-weight:400}}
+.grid-line{{stroke:var(--chart-border-subtle);stroke-width:1}}
+.axis-line{{stroke:var(--chart-border-default);stroke-width:1}}
+.axis-label{{fill:var(--chart-text-secondary);font-size:10px;font-weight:400}}
+.x-label{{fill:var(--chart-text-secondary);font-size:10px;font-weight:400}}
 .line-path{{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}}
-.point-outer{{fill:#fff;stroke-width:2}}
+.point-outer{{fill:var(--chart-point-fill);stroke-width:2}}
 .point-inner{{stroke-width:0;cursor:crosshair}}
 .hover-zone{{fill:rgba(0,0,0,0);cursor:crosshair;pointer-events:all}}
-.position-line{{stroke:#6b7280;stroke-width:1;pointer-events:none;opacity:0;shape-rendering:crispEdges}}
-.overlay-label{{fill:#475467;font-size:11px;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round;pointer-events:none}}
-.chart-legend{{position:relative;width:100%;min-height:28px;margin:10px 0 0;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px 18px;color:#858585;font-size:10px;line-height:1.2;text-align:center;pointer-events:none;overflow:visible}}
+.position-line{{stroke:var(--chart-text-muted);stroke-width:1;pointer-events:none;opacity:0;shape-rendering:crispEdges}}
+.overlay-label{{fill:var(--chart-text-secondary);font-size:11px;font-weight:700;paint-order:stroke;stroke:var(--chart-point-fill);stroke-width:4px;stroke-linejoin:round;pointer-events:none}}
+.chart-legend{{position:relative;width:100%;min-height:28px;margin:10px 0 0;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px 18px;color:var(--chart-text-secondary);font-size:10px;line-height:1.2;text-align:center;pointer-events:none;overflow:visible}}
 .legend-item{{display:flex;align-items:center;gap:7px;white-space:nowrap}}
 .legend-dot{{width:8px;height:8px;border-radius:50%;flex:none}}
-.chart-tooltip{{position:fixed;z-index:2147483647;display:inline-grid;min-width:0;width:fit-content;max-width:min(220px,calc(100vw - 24px));padding:6px 8px;background:rgba(59,59,59,.96);color:#fff;border-radius:6px;font-size:10px;line-height:1.35;box-shadow:none;filter:none;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .08s ease;white-space:nowrap}}
+.chart-tooltip{{position:fixed;z-index:2147483647;display:inline-grid;min-width:0;width:fit-content;max-width:min(220px,calc(100vw - 24px));padding:6px 8px;background:var(--chart-tooltip-bg);color:#fff;border-radius:6px;font-size:10px;line-height:1.35;box-shadow:none;filter:none;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .08s ease;white-space:nowrap}}
 .chart-tooltip::after{{content:"";display:var(--tooltip-arrow-display,block);position:absolute;left:var(--arrow-left,50%);top:calc(100% - 1px);transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--tooltip-bg,rgba(59,59,59,.96))}}
 .chart-tooltip.active{{opacity:1;visibility:visible}}
 .tooltip-title{{color:#d8d8d8;margin-bottom:3px;font-size:9px;font-weight:400;line-height:1.2}}
@@ -819,7 +826,16 @@ function deepMerge(base, patch) {{
   }});
   return output;
 }}
-const visual = deepMerge(DEFAULT_STYLE, config.visualStyle || {{}});
+const DARK_STYLE = {{
+  grid: {{color:'#2b3544'}}, xAxis: {{color:'#c1cad7',lineColor:'#334052'}},
+  yAxis: {{color:'#c1cad7',lineColor:'#334052'}}, point: {{fill:'#181e28'}},
+  legend: {{color:'#c1cad7'}}, tooltip: {{background:'#202733',color:'#f1f5f9'}},
+  hover: {{bandColor:'#c1cad7'}}, positionLine: {{color:'#93a0b3'}}
+}};
+const isDark = document.documentElement.dataset.theme === 'dark' || config.themeMode === 'dark';
+const visual = deepMerge(deepMerge(DEFAULT_STYLE, isDark ? DARK_STYLE : {{}}), config.visualStyle || {{}});
+const DARK_COLOR_ALIASES = {{'#4387f5':'#8294ff','#4bc3d5':'#34d3ad','#f9730c':'#f6ad55','#8b5cf6':'#d19dff','#10b981':'#34d3ad','#ef4444':'#ff7188','#64748b':'#93a0b3','#f59e0b':'#f6ad55'}};
+const chartColor = color => isDark ? (DARK_COLOR_ALIASES[String(color || '').toLowerCase()] || color) : color;
 let activeView = config.defaultView && config.views?.[config.defaultView] ? config.defaultView : Object.keys(config.views || {{}})[0];
 let tooltipPortalAckUntil = 0;
 
@@ -1006,7 +1022,7 @@ function styledSeries() {{
       ...series,
       axis: style.axis || series.axis || 'left',
       label: style.label || series.label || series.field,
-      color: style.color || series.color || {json.dumps(PALETTE)}[index % {len(PALETTE)}],
+      color: chartColor(style.color || series.color || {json.dumps(PALETTE)}[index % {len(PALETTE)}]),
       strokeWidth: toNumber(style.strokeWidth, toNumber(visual.line.strokeWidth, 2.4)),
       opacity: toNumber(style.opacity, toNumber(visual.line.opacity, 1)),
       dasharray: style.dasharray || visual.line.dasharray || '',

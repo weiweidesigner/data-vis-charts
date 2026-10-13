@@ -346,6 +346,9 @@ def normalize_xy_series(component: dict[str, Any], component_type: str, default_
     legend.setdefault("visible", len(normalized_series) > 1)
     return {
         "type": component_type,
+        "themeMode": str(
+            props.get("themeMode") or props.get("theme") or component.get("themeMode") or component.get("theme") or "light"
+        ).lower(),
         "title": str(component.get("title") or props.get("title") or default_title),
         "xField": x_field,
         "height": int(props.get("height") or component.get("height") or 360),
@@ -371,36 +374,40 @@ def normalize_xy_series(component: dict[str, Any], component_type: str, default_
 def render_svg_chart(config: dict[str, Any], chart_kind: str) -> str:
     config_json = json.dumps(config, ensure_ascii=False).replace("</", "<\\/")
     title = html.escape(config["title"])
+    theme_mode = "dark" if config.get("themeMode") == "dark" else "light"
     return f"""<!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="{theme_mode}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{title}</title>
+<script>(() => {{ const theme = new URLSearchParams(location.search).get('theme'); if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme; }})();</script>
 <style>
 *{{box-sizing:border-box}}
+:root{{--chart-text-primary:#171b22;--chart-text-secondary:#5f6876;--chart-text-muted:#8b94a2;--chart-border-subtle:#edf0f4;--chart-border-default:#a3a8b0;--chart-point-fill:#fff;--chart-highlight:#8a8a8a;--chart-tooltip-bg:rgba(59,59,59,.96)}}
+:root[data-theme="dark"]{{color-scheme:dark;--chart-text-primary:#f1f5f9;--chart-text-secondary:#c1cad7;--chart-text-muted:#93a0b3;--chart-border-subtle:#2b3544;--chart-border-default:#334052;--chart-point-fill:#181e28;--chart-highlight:#c1cad7;--chart-tooltip-bg:#202733}}
 html,body{{width:100%;height:100%;margin:0;background:transparent}}
-body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0;background:transparent;color:#171717}}
+body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0;background:transparent;color:var(--chart-text-primary)}}
 .chart-component{{position:relative;width:100%;container-type:inline-size;height:clamp(320px,calc(100cqw * .42),{config["height"]}px);padding:0;background:transparent;overflow:visible}}
 .chart-title{{min-height:22px;max-height:42px;margin:0;font-size:16px;font-weight:800;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}}
 .chart-stage{{width:100%;height:calc(100% - 50px);margin-top:8px;overflow:visible}}
 svg{{display:block;width:100%;height:100%;overflow:visible}}
-.grid-line{{stroke:#ececec;stroke-width:1}}
-.axis-line{{stroke:#a3a8b0;stroke-width:1}}
-.distribution-zero-line{{stroke:#64748b;stroke-width:1.25;stroke-dasharray:4 4;pointer-events:none}}
-.distribution-zero-label{{fill:#64748b;font-size:10px;font-weight:700;text-anchor:middle}}
-.axis-label{{fill:#747474;font-size:10px;font-weight:400}}
-.x-label{{fill:#666;font-size:10px;font-weight:400;text-anchor:middle}}
+.grid-line{{stroke:var(--chart-border-subtle);stroke-width:1}}
+.axis-line{{stroke:var(--chart-border-default);stroke-width:1}}
+.distribution-zero-line{{stroke:var(--chart-text-muted);stroke-width:1.25;stroke-dasharray:4 4;pointer-events:none}}
+.distribution-zero-label{{fill:var(--chart-text-muted);font-size:10px;font-weight:700;text-anchor:middle}}
+.axis-label{{fill:var(--chart-text-secondary);font-size:10px;font-weight:400}}
+.x-label{{fill:var(--chart-text-secondary);font-size:10px;font-weight:400;text-anchor:middle}}
 .bar{{rx:0;cursor:crosshair}}
 .line-path{{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}}
-.point{{fill:#fff;stroke-width:2;cursor:crosshair}}
+.point{{fill:var(--chart-point-fill);stroke-width:2;cursor:crosshair}}
 .hover-zone{{fill:transparent;cursor:crosshair}}
-.highlight{{fill:#8a8a8a;pointer-events:none}}
-.chart-legend{{position:absolute;left:8px;right:8px;bottom:4px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px 18px;color:#858585;font-size:10px;line-height:1.2;text-align:center;pointer-events:none}}
+.highlight{{fill:var(--chart-highlight);pointer-events:none}}
+.chart-legend{{position:absolute;left:8px;right:8px;bottom:4px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px 18px;color:var(--chart-text-secondary);font-size:10px;line-height:1.2;text-align:center;pointer-events:none}}
 .legend-item{{display:flex;align-items:center;gap:7px;white-space:nowrap}}
 .legend-dot{{width:8px;height:8px;border-radius:50%;flex:none}}
-.chart-tooltip{{position:fixed;z-index:2147483647;display:inline-grid;min-width:180px;width:max-content;max-width:min(220px,calc(100vw - 24px));padding:8px 10px;background:rgba(59,59,59,.96);color:#fff;border-radius:6px;font-size:10px;line-height:1.35;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .08s ease;box-shadow:none;filter:none;white-space:normal}}
-.chart-tooltip::after{{content:"";position:absolute;left:var(--arrow-left,50%);bottom:-5px;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:5px solid rgba(59,59,59,.96)}}
+.chart-tooltip{{position:fixed;z-index:2147483647;display:inline-grid;min-width:180px;width:max-content;max-width:min(220px,calc(100vw - 24px));padding:8px 10px;background:var(--chart-tooltip-bg);color:#fff;border-radius:6px;font-size:10px;line-height:1.35;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .08s ease;box-shadow:none;filter:none;white-space:normal}}
+.chart-tooltip::after{{content:"";position:absolute;left:var(--arrow-left,50%);bottom:-5px;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:5px solid var(--chart-tooltip-bg)}}
 .chart-tooltip.active{{opacity:1;visibility:visible}}
 .tooltip-row{{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:12px;min-height:17px;white-space:normal}}
 .tooltip-row b{{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}}
@@ -425,6 +432,8 @@ const legend = root.querySelector('.chart-legend');
 const tooltip = root.querySelector('.chart-tooltip');
 const NS = 'http://www.w3.org/2000/svg';
 const GENERIC_SERIES_LABELS = new Set(['', 'value', 'val', 'amount']);
+const DARK_COLOR_ALIASES = {{'#4387f5':'#8294ff','#4bc3d5':'#34d3ad','#f9730c':'#f6ad55','#8b5cf6':'#d19dff','#10b981':'#34d3ad','#ef4444':'#ff7188','#00b899':'#34d3ad','#ff2f57':'#ff7188','#94a3b8':'#93a0b3'}};
+const chartColor = color => document.documentElement.dataset.theme === 'dark' ? (DARK_COLOR_ALIASES[String(color || '').toLowerCase()] || color) : color;
 let tooltipPortalAckUntil = 0;
 const node = (name, attrs = {{}}, text = '') => {{
   const el = document.createElementNS(NS, name);
@@ -849,11 +858,11 @@ function render() {{
   if (chartKind === 'line') {{
     config.series.forEach(series => {{
       const points = config.data.map((row, index) => [xCenter(index), y(row[series.field]), number(row[series.field])]);
-      svg.appendChild(node('path', {{d:points.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(' '),class:'line-path',stroke:series.color}}));
+      svg.appendChild(node('path', {{d:points.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(' '),class:'line-path',stroke:chartColor(series.color)}}));
       points.forEach((p, index) => {{
-        const point = node('circle', {{cx:p[0],cy:p[1],r:3.5,class:'point',stroke:series.color}});
-        point.addEventListener('mouseenter', () => showTooltip(p[0], [{{label:series.label,color:series.color,value:p[2]}}], config.data[index][config.xField], margin.top));
-        point.addEventListener('mousemove', () => showTooltip(p[0], [{{label:series.label,color:series.color,value:p[2]}}], config.data[index][config.xField], margin.top));
+        const point = node('circle', {{cx:p[0],cy:p[1],r:3.5,class:'point',stroke:chartColor(series.color)}});
+        point.addEventListener('mouseenter', () => showTooltip(p[0], [{{label:series.label,color:chartColor(series.color),value:p[2]}}], config.data[index][config.xField], margin.top));
+        point.addEventListener('mousemove', () => showTooltip(p[0], [{{label:series.label,color:chartColor(series.color),value:p[2]}}], config.data[index][config.xField], margin.top));
         point.addEventListener('mouseleave', hideTooltip);
         svg.appendChild(point);
       }});
@@ -864,7 +873,7 @@ function render() {{
     const barW = Math.max(4, (groupW - barGap * (config.series.length - 1)) / config.series.length);
     config.data.forEach((row, rowIndex) => {{
       const groupX = xCenter(rowIndex) - groupW / 2;
-      const tooltipRows = config.series.map(series => ({{label:displaySeriesLabel(series),color:row.__markColors?.[series.field] || series.color,value:number(row[series.field]),series}}));
+      const tooltipRows = config.series.map(series => ({{label:displaySeriesLabel(series),color:chartColor(row.__markColors?.[series.field] || series.color),value:number(row[series.field]),series}}));
       const highlight = node('rect', {{
         x:margin.left + slot * rowIndex,
         y:margin.top,
@@ -880,7 +889,7 @@ function render() {{
         const value = number(row[series.field]);
         const y0 = y(0);
         const y1 = y(value);
-        const rect = node('rect', {{x:groupX + seriesIndex * (barW + barGap),y:Math.min(y0,y1),width:barW,height:Math.max(1,Math.abs(y0-y1)),fill:row.__markColors?.[series.field] || series.color,class:'bar'}});
+        const rect = node('rect', {{x:groupX + seriesIndex * (barW + barGap),y:Math.min(y0,y1),width:barW,height:Math.max(1,Math.abs(y0-y1)),fill:chartColor(row.__markColors?.[series.field] || series.color),class:'bar'}});
         svg.appendChild(rect);
       }});
       const hit = node('rect', {{
@@ -921,7 +930,7 @@ function render() {{
     if (!label) return;
     const item = document.createElement('span');
     item.className = 'legend-item';
-    item.innerHTML = `<i class="legend-dot" style="background:${{series.color}}"></i>${{label}}`;
+    item.innerHTML = `<i class="legend-dot" style="background:${{chartColor(series.color)}}"></i>${{label}}`;
     legend.appendChild(item);
   }});
 }}

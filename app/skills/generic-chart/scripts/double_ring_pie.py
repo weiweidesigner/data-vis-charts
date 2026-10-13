@@ -150,12 +150,12 @@ def render_document(payload: dict[str, Any]) -> str:
 <title>{title}</title>
 <style>
 :root{{color-scheme:light;--business-text-171717:#171717;--business-bg-fff:#fff;--business-bg-2f2f2f:#2f2f2f;--business-text-fff:#fff;--business-text-4b5563:#4b5563;}}
-:root[data-theme="dark"]{{color-scheme:dark;--business-text-171717:#e8edf5;--business-bg-fff:#202b3a;--business-bg-2f2f2f:#263242;--business-text-fff:#f5f7fb;--business-text-4b5563:#a8b3c4;}}
+:root[data-theme="dark"]{{color-scheme:dark;--business-text-171717:#f1f5f9;--business-bg-fff:#181e28;--business-bg-2f2f2f:#202733;--business-text-fff:#f1f5f9;--business-text-4b5563:#c1cad7;}}
 
 *{{box-sizing:border-box}}
 	html,body{{width:100%;min-height:0;margin:0;background:transparent}}
 	body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0;color:var(--business-text-171717);overflow:hidden}}
-	.double-ring-component{{width:100%;min-height:0;padding:8px 18px 10px;background:var(--business-bg-fff)}}
+	.double-ring-component{{width:100%;min-height:0;padding:8px 18px 10px;background:transparent}}
 	.ring-layout{{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;max-width:560px;margin:0 auto}}
 	.ring-stage{{position:relative;width:100%;height:250px;display:flex;align-items:center;justify-content:center}}
 	.ring-side{{width:100%;display:flex;justify-content:center}}

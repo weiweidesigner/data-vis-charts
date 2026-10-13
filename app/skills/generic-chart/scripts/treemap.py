@@ -290,19 +290,24 @@ def render_document(payload: dict[str, Any]) -> str:
     config_json = json.dumps(config, ensure_ascii=False).replace("</", "<\\/")
     title = html.escape(config["title"] or "矩形图")
     contract = html.escape(json.dumps(component_schema(), ensure_ascii=False), quote=True)
+    props = payload.get("props") if isinstance(payload.get("props"), dict) else {}
+    theme_mode = "dark" if (payload.get("theme") or payload.get("themeMode") or props.get("theme") or props.get("themeMode")) == "dark" else "light"
     return f"""<!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="{theme_mode}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{title}</title>
+<script>(() => {{ const theme = new URLSearchParams(location.search).get('theme'); if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme; }})();</script>
 <style>
 *{{box-sizing:border-box}}
+:root{{--chart-text-primary:#171b22;--chart-text-secondary:#5f6876;--chart-tooltip-bg:#303030}}
+:root[data-theme="dark"]{{color-scheme:dark;--chart-text-primary:#f1f5f9;--chart-text-secondary:#c1cad7;--chart-tooltip-bg:#202733}}
 html,body{{width:100%;height:100%;margin:0;background:transparent}}
-body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0;color:#171717}}
+body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0;color:var(--chart-text-primary)}}
 .treemap-component{{position:relative;width:100%;min-height:{config["height"]}px;padding:18px 22px 16px;background:transparent;overflow:visible}}
-.treemap-title{{min-height:22px;margin:0;color:#171717;font-size:16px;font-weight:800;line-height:1.25}}
-.treemap-subtitle{{margin:2px 0 6px;color:#737373;font-size:13px;line-height:1.35}}
+.treemap-title{{min-height:22px;margin:0;color:var(--chart-text-primary);font-size:16px;font-weight:800;line-height:1.25}}
+.treemap-subtitle{{margin:2px 0 6px;color:var(--chart-text-secondary);font-size:13px;line-height:1.35}}
 .treemap-subtitle:empty{{display:none}}
 .treemap-stage{{position:relative;width:100%;height:{max(180, config["height"] - 86)}px;border:0;border-radius:0;overflow:hidden;background:transparent}}
 .treemap-cell{{position:absolute;display:flex;flex-direction:column;justify-content:flex-start;gap:5px;padding:12px;border:0;border-radius:0;overflow:hidden;color:var(--treemap-text-color,{TEXT_COLOR});text-shadow:var(--treemap-text-shadow,none);cursor:crosshair;box-shadow:none;transition:filter .14s ease,box-shadow .14s ease}}
@@ -323,12 +328,12 @@ body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Mic
 .treemap-cell.label-value-only .treemap-value{{font-size:10px;line-height:1.1}}
 .treemap-cell.label-name-only .treemap-value{{display:none}}
 .treemap-cell.label-name-only .treemap-label{{-webkit-line-clamp:2}}
-.treemap-tooltip{{position:absolute;z-index:10;min-width:176px;padding:9px 11px;background:#303030;color:{TEXT_COLOR};border:0;border-radius:6px;font-size:13px;line-height:1.45;pointer-events:none;opacity:0;visibility:hidden;box-shadow:0 10px 24px rgba(15,23,42,.18)}}
+.treemap-tooltip{{position:absolute;z-index:10;min-width:176px;padding:9px 11px;background:var(--chart-tooltip-bg);color:{TEXT_COLOR};border:0;border-radius:6px;font-size:13px;line-height:1.45;pointer-events:none;opacity:0;visibility:hidden;box-shadow:0 10px 24px rgba(15,23,42,.18)}}
 .treemap-tooltip.active{{opacity:1;visibility:visible}}
 .tooltip-title{{display:flex;align-items:center;gap:8px;font-weight:700;white-space:nowrap}}
 .tooltip-dot,.legend-dot{{width:9px;height:9px;border-radius:2px;flex:none}}
 .tooltip-value{{padding-left:17px;white-space:nowrap}}
-.treemap-legend{{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;margin-top:13px;padding-top:1px;color:#555;font-size:13px;line-height:1.2}}
+.treemap-legend{{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;margin-top:13px;padding-top:1px;color:var(--chart-text-secondary);font-size:13px;line-height:1.2}}
 .legend-item{{display:flex;align-items:center;gap:7px;min-width:0}}
 .legend-label{{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 .treemap-component.hide-legend .treemap-legend{{display:none}}

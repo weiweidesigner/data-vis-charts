@@ -141,18 +141,18 @@ def render_style(visual_style: dict[str, Any], theme_mode: str, explicit_style: 
     grid = style_dict(visual_style.get("grid"))
     hover = style_dict(visual_style.get("hover"))
     margin = style_dict(visual_style.get("margin"))
-    background = style_color(container.get("background"), "#111827" if dark else "#ffffff") if explicit_style or dark else "#ffffff"
-    grid_color = style_color(grid.get("color") or y_axis.get("gridColor"), "#283244" if dark else "#e8e8e8")
-    axis_color = style_color(x_axis.get("color") or y_axis.get("color"), "#9aa6b8" if dark else "#777")
+    background = style_color(container.get("background"), "#181e28" if dark else "#ffffff") if explicit_style or dark else "#ffffff"
+    grid_color = style_color(grid.get("color") or y_axis.get("gridColor"), "#2b3544" if dark else "#e8e8e8")
+    axis_color = style_color(x_axis.get("color") or y_axis.get("color"), "#c1cad7" if dark else "#777")
     return {
         "background": background,
         "bodyBackground": background,
-        "titleColor": style_color(title.get("color"), "#f8fafc" if dark else "#16181c"),
+        "titleColor": style_color(title.get("color"), "#f1f5f9" if dark else "#16181c"),
         "titleSize": number_from_style(title.get("fontSize"), 16),
         "gridColor": grid_color,
         "axisColor": axis_color,
-        "xAxisColor": style_color(x_axis.get("color"), "#9aa6b8" if dark else "#666"),
-        "hoverColor": style_color(hover.get("bandColor"), "#d6e1ff" if dark else "#8a8a8a"),
+        "xAxisColor": style_color(x_axis.get("color"), "#c1cad7" if dark else "#666"),
+        "hoverColor": style_color(hover.get("bandColor"), "#c1cad7" if dark else "#8a8a8a"),
         "hoverOpacity": number_from_style(hover.get("bandOpacity"), 0.08),
         "gridCount": int(number_from_style(grid.get("count"), 5)),
         "margin": {key: number_from_style(value, 0) for key, value in margin.items() if key in {"top", "right", "bottom", "left"}},
@@ -298,7 +298,10 @@ def normalize_payload(payload: dict[str, Any], title_override: str | None = None
     columns, lines = infer_series(component, props, rows, x_field)
     apply_series_style(columns + lines, style)
     chart_style = style_dict(style.get("chart"))
-    configured_theme = str(component.get("themeMode") or props.get("themeMode") or payload.get("themeMode") or "").lower()
+    configured_theme = str(
+        component.get("themeMode") or component.get("theme") or props.get("themeMode") or props.get("theme")
+        or payload.get("themeMode") or payload.get("theme") or ""
+    ).lower()
     theme_mode = configured_theme if configured_theme in {"light", "dark"} else ""
     if explicit_style:
         background = str(style_dict(style.get("container")).get("background") or "")
@@ -341,23 +344,24 @@ def render_html(config: dict[str, Any]) -> str:
     x_axis_color = html.escape(str(style.get("xAxisColor") or axis_color))
     hover_color = html.escape(str(style.get("hoverColor") or "#f7f7f7"))
     return f"""<!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="{config.get('themeMode', 'light')}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{title}</title>
+<script>(() => {{ const theme = new URLSearchParams(location.search).get('theme'); if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme; }})();</script>
 <style>
 *{{box-sizing:border-box}}
 html,body{{width:100%;height:100%;margin:0}}
 body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0;background:transparent;color:#171717}}
-body.theme-dark{{background:transparent;color:#f8fafc}}
+:root[data-theme="dark"] body,body.theme-dark{{background:transparent;color:#f1f5f9}}
 .chart-component{{position:relative;width:100%;container-type:inline-size;height:clamp(340px,calc(100cqw / {config["aspectRatio"]}),{config["height"]}px);padding:0;background:transparent;overflow:visible}}
 .chart-title{{min-height:22px;max-height:42px;margin:0;font-size:{title_size:g}px;font-weight:800;line-height:1.25;color:{title_color};overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}}
 .chart-tabs{{position:absolute;z-index:3;top:8px;right:18px;display:flex;align-items:center;gap:4px}}
 .chart-tab{{appearance:none;border:0;background:transparent;color:#404040;height:36px;min-width:58px;padding:0 13px;border-radius:10px;font:inherit;font-size:14px;cursor:pointer}}
 .chart-tab[aria-selected="true"]{{background:#f1f1f1;color:#171717;font-weight:700}}
-body.theme-dark .chart-tab{{color:#a9b3c3}}
-body.theme-dark .chart-tab[aria-selected="true"]{{background:#202838;color:#f4f7fb}}
+:root[data-theme="dark"] .chart-tab,body.theme-dark .chart-tab{{color:#c1cad7}}
+:root[data-theme="dark"] .chart-tab[aria-selected="true"],body.theme-dark .chart-tab[aria-selected="true"]{{background:#202733;color:#f1f5f9}}
 .chart-stage{{position:relative;width:100%;height:calc(100% - 50px);margin-top:8px;overflow:visible}}
 .chart-component.has-range .chart-stage{{height:calc(100% - 90px)}}
 svg{{display:block;width:100%;height:100%;overflow:visible}}
@@ -369,11 +373,11 @@ svg{{display:block;width:100%;height:100%;overflow:visible}}
 .bar-label{{fill:#2863f4;font-size:11px;font-weight:700;text-anchor:middle}}
 .line-path{{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}}
 .point{{fill:#fff;stroke-width:2;cursor:crosshair}}
-body.theme-dark .point{{fill:#111827}}
+:root[data-theme="dark"] .point,body.theme-dark .point{{fill:#181e28}}
 .hover-zone{{fill:transparent;cursor:crosshair}}
 .highlight{{fill:{hover_color};pointer-events:none}}
 .chart-legend{{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:10px 18px;position:absolute;left:8px;right:8px;bottom:4px;min-height:24px;color:#858585;font-size:10px;line-height:1.2;text-align:center;pointer-events:none}}
-body.theme-dark .chart-legend{{color:#aab4c5}}
+:root[data-theme="dark"] .chart-legend,body.theme-dark .chart-legend{{color:#c1cad7}}
 .legend-item{{display:flex;align-items:center;gap:7px;white-space:nowrap}}
 .legend-dot{{width:8px;height:8px;border-radius:50%;flex:none}}
 .chart-tooltip{{position:fixed;z-index:2147483647;display:inline-grid;min-width:0;width:fit-content;max-width:220px;padding:6px 8px;background:rgba(59,59,59,.96);color:#fff;border-radius:6px;font-size:10px;line-height:1.35;pointer-events:none;opacity:0;visibility:hidden;box-shadow:none;filter:none;white-space:nowrap;transition:opacity .08s ease}}
@@ -393,10 +397,10 @@ body.theme-dark .chart-legend{{color:#aab4c5}}
 .range-handle{{appearance:none;position:absolute;top:calc(var(--handle-size) / 2);width:var(--handle-size);height:var(--handle-size);border-radius:50%;border:1px solid #d5d5d5;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.18);transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;cursor:grab;z-index:2;padding:0;user-select:none}}
 .range-handle:active{{cursor:grabbing}}
 .range-handle::before{{content:"";width:2px;height:13px;border-radius:999px;background:#8a8a8a;box-shadow:-5px 0 0 #8a8a8a,5px 0 0 #8a8a8a;opacity:.9}}
-body.theme-dark .range-track::before{{background:#263044}}
-body.theme-dark .range-selection{{background:#8d97a8}}
-body.theme-dark .range-handle{{border-color:#4b5870;background:#192130;box-shadow:0 1px 5px rgba(0,0,0,.35)}}
-body.theme-dark .range-handle::before{{background:#a9b3c3;box-shadow:-5px 0 0 #a9b3c3,5px 0 0 #a9b3c3}}
+:root[data-theme="dark"] .range-track::before,body.theme-dark .range-track::before{{background:#2b3544}}
+:root[data-theme="dark"] .range-selection,body.theme-dark .range-selection{{background:#93a0b3}}
+:root[data-theme="dark"] .range-handle,body.theme-dark .range-handle{{border-color:#334052;background:#181e28;box-shadow:0 1px 5px rgba(0,0,0,.35)}}
+:root[data-theme="dark"] .range-handle::before,body.theme-dark .range-handle::before{{background:#c1cad7;box-shadow:-5px 0 0 #c1cad7,5px 0 0 #c1cad7}}
 @media(min-width:1200px){{.chart-component{{height:{config["height"]}px}}}}
 @media(max-width:680px){{.chart-component{{height:clamp(248px,calc(100cqw / {config["aspectRatio"]}),320px);padding:0}}.chart-component.has-range{{height:clamp(286px,calc((100cqw / {config["aspectRatio"]}) + 38px),358px)}}.chart-title{{min-height:18px;max-height:38px;font-size:14px;line-height:1.28;padding:0}}.chart-tabs{{top:4px;right:0;gap:2px}}.chart-tab{{height:30px;min-width:44px;padding:0 8px;border-radius:8px;font-size:12px}}.chart-stage{{height:calc(100% - 50px);margin-top:6px}}.chart-component.has-range .chart-stage{{height:calc(100% - 88px)}}.axis-label,.x-label{{font-size:10px}}.bar-label{{display:none}}.chart-legend{{left:0;right:0;bottom:0;gap:8px 12px;min-height:30px;font-size:10px;align-content:center}}.legend-item{{gap:5px;max-width:42%;overflow:hidden;text-overflow:ellipsis}}.legend-dot{{width:8px;height:8px}}.chart-tooltip{{min-width:0;max-width:220px;font-size:10px;padding:6px 8px;white-space:normal}}.tooltip-label{{min-width:0}}.range-shell{{--handle-size:24px;margin-top:4px;padding:0 calc(var(--handle-size) / 2)}}.range-handle::before{{height:11px;box-shadow:-4px 0 0 #8a8a8a,4px 0 0 #8a8a8a}}}}
 </style>
@@ -454,14 +458,19 @@ const DEFAULT_STYLE = {{
   seriesStyle: [],
 }};
 const DARK_STYLE = {{
-  grid: {{color: '#283244', opacity: 1}},
-  xAxis: {{color: '#9aa6b8', lineColor: '#647086'}},
-  yAxis: {{color: '#9aa6b8', lineColor: '#647086'}},
-  legend: {{color: '#aab4c5'}},
-  tooltip: {{background: 'rgba(19,24,34,.98)', color: '#f5f7fb'}},
-  hover: {{bandColor: '#d6e1ff', bandOpacity: 0.08}},
+  grid: {{color: '#2b3544', opacity: 1}},
+  xAxis: {{color: '#c1cad7', lineColor: '#334052'}},
+  yAxis: {{color: '#c1cad7', lineColor: '#334052'}},
+  legend: {{color: '#c1cad7'}},
+  tooltip: {{background: '#202733', color: '#f1f5f9'}},
+  hover: {{bandColor: '#c1cad7', bandOpacity: 0.08}},
 }};
-const visual = deepMerge(deepMerge(DEFAULT_STYLE, config.themeMode === 'dark' ? DARK_STYLE : {{}}), config.visualStyle || {{}});
+const isDark = document.documentElement.dataset.theme === 'dark' || config.themeMode === 'dark';
+const visual = deepMerge(deepMerge(DEFAULT_STYLE, isDark ? DARK_STYLE : {{}}), config.visualStyle || {{}});
+const DARK_COLOR_ALIASES = {{'#2863f4':'#8294ff','#4bc3d5':'#34d3ad','#2ab7a1':'#34d3ad','#8b5cf6':'#d19dff','#ff3d7f':'#ff7188','#ff6845':'#ff9592','#00b899':'#34d3ad','#ff2f57':'#ff7188','#94a3b8':'#93a0b3'}};
+const chartColor = color => isDark ? (DARK_COLOR_ALIASES[String(color || '').toLowerCase()] || color) : color;
+(config.columnSeries || []).forEach(series => {{ series.color = chartColor(series.color); }});
+(config.lineSeries || []).forEach(series => {{ series.color = chartColor(series.color); }});
 function matchesColorRule(value, condition) {{
   const match = String(condition || '').trim().match(/^(<=|>=|==|=|<|>)\\s*(-?(?:\\d+(?:\\.\\d*)?|\\.\\d+))$/);
   if (!match || !Number.isFinite(Number(value))) return false;
@@ -474,10 +483,10 @@ function matchesColorRule(value, condition) {{
 }}
 function barMarkColor(row, series, value) {{
   const explicit = row?.__markColors?.[series.field];
-  if (explicit) return explicit;
+  if (explicit) return chartColor(explicit);
   const rules = Array.isArray(visual.colorRules) ? visual.colorRules : [];
   const matched = rules.find(rule => (!rule?.field || String(rule.field) === String(series.field)) && matchesColorRule(value, rule?.condition));
-  return matched?.color || series.color;
+  return chartColor(matched?.color || series.color);
 }}
 if (visual.customCss || visual.css) {{
   const style = document.createElement('style');
