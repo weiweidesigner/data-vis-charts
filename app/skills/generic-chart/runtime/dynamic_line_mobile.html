@@ -1,6 +1,12 @@
 <style id="dynamicLineMobileLayout">
-.mobileDynamicHeader{display:none}
-#wrap #timelineBar{left:var(--dynamic-player-left,0px)!important;right:var(--dynamic-player-right,0px)!important}
+.mobileDynamicHeader{display:block;position:absolute;left:0;right:0;top:0;z-index:2}
+.mobileDynamicTitle{margin:0 0 10px;font:700 18px/1.4 sans-serif;overflow-wrap:anywhere}
+.mobileDynamicLegend{display:flex;flex-wrap:wrap;gap:8px 18px}
+.mobileDynamicLegend button{display:flex;align-items:center;gap:6px;min-width:0;padding:2px 0;border:0;background:transparent;color:inherit;font:12px/1.4 sans-serif;text-align:left;touch-action:manipulation}
+.mobileDynamicLegend i{width:16px;height:4px;flex:none;border-radius:2px}
+.mobileDynamicLegend b{font-weight:500;font-variant-numeric:tabular-nums}
+.mobileDynamicLegend button[aria-pressed="false"]{opacity:.4}
+#wrap #timelineBar{box-sizing:border-box;bottom:8px!important;min-width:0;left:var(--dynamic-player-left,0px)!important;right:var(--dynamic-player-right,0px)!important}
 @media(max-width:720px){
  #wrap{height:var(--mobile-dynamic-height,380px)!important;min-height:0!important}
  .mobileDynamicHeader{display:block;position:absolute;left:0;right:0;top:0;z-index:2}
@@ -26,9 +32,10 @@ function getDynamicFullRange(){
  const values=Object.values(fullSeriesDataMap).flat().filter(value=>value!==null&&value!==undefined&&value!=='').map(Number).filter(Number.isFinite);
  if(!values.length)return {};
  const low=Math.min(...values),high=Math.max(...values),span=high-low;
- const pad=span>0?span*.06:Math.max(1,Math.abs(high)*.06);
- const step=span>0?Math.pow(10,Math.floor(Math.log10(span))-2):.01;
- dynamicFullRangeCache={min:Number((Math.floor((low-pad)/step)*step).toPrecision(12)),max:Number((Math.ceil((high+pad)/step)*step).toPrecision(12))};
+ const pad=span>0?span*.02:Math.max(1,Math.abs(high)*.06);
+ const target=(span+2*pad)/7,power=Math.pow(10,Math.floor(Math.log10(target)));
+ const step=([1,2,2.5,5,10].find(n=>n*power>=target)||10)*power;
+ dynamicFullRangeCache={min:Number((Math.floor((low-pad)/step)*step).toPrecision(12)),max:Number((Math.ceil((high+pad)/step)*step).toPrecision(12)),interval:step};
  return dynamicFullRangeCache;
 }
 function getDynamicPlayerBottom(){return Math.ceil(document.getElementById('timelineBar').getBoundingClientRect().height)+24;}
@@ -51,8 +58,7 @@ function alignDynamicPlayer(){
 function updateMobileDynamicHeader(){
  let header=document.querySelector('.mobileDynamicHeader');
  if(!header){header=document.createElement('div');header.className='mobileDynamicHeader';document.getElementById('wrap').append(header);}
- const compact=isCompactLayout();header.hidden=!compact;
- if(!compact)return;
+ const compact=isCompactLayout();header.hidden=false;
  header.replaceChildren();
  const heading=document.createElement('div');heading.className='mobileDynamicTitle';heading.textContent=title;heading.style.color=window.__projectDynamicLineTheme.text;header.append(heading);
  const legend=document.createElement('div');legend.className='mobileDynamicLegend';legend.style.color=window.__projectDynamicLineTheme.muted;
@@ -66,6 +72,6 @@ function updateMobileDynamicHeader(){
  header.append(legend);
  const height=Math.ceil(header.getBoundingClientRect().height)+250+10+getDynamicPlayerBottom();
  const wrap=document.getElementById('wrap');
- if(wrap.style.getPropertyValue('--mobile-dynamic-height')!==height+'px'){wrap.style.setProperty('--mobile-dynamic-height',height+'px');chart.resize();}
+ if(compact && wrap.style.getPropertyValue('--mobile-dynamic-height')!==height+'px'){wrap.style.setProperty('--mobile-dynamic-height',height+'px');chart.resize();}
 }
 </script>
