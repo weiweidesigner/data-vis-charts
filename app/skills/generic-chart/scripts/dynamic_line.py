@@ -475,7 +475,7 @@ def apply_layout_and_labels(document: str, *, dark: bool) -> str:
         "        legendLeft: 0,\n"
         "        legendRight: 0,\n"
         "        gridLeft: 0,\n"
-        "        gridRight: 0,\n"
+        "        gridRight: 12,\n"
         "        gridTop: legendTop + legendRows * legendRowHeight + (compact ? 12 : 16),\n"
         "        gridBottom: compact ? 76 : 92\n"
         "      };\n"
@@ -702,6 +702,7 @@ def postprocess_dynamic_line(payload: dict[str, Any], output: Path) -> None:
     document = document.replace("gridBottom: compact ? 76 : 92", "gridBottom: getDynamicPlayerBottom()")
     document = document.replace("</body>", (Path(__file__).resolve().parents[1] / "runtime/mobile_interactions.html").read_text(encoding="utf-8") + "</body>")
     document = document.replace("          scale: true,\n          splitNumber: 4,", "          scale: true,\n          ...getDynamicFullRange(),\n          splitNumber: 4,")
+    document = document.replace("axisLine: {\n            lineStyle:", "axisLine: {\n            show: false,\n            lineStyle:", 1)
     document = document.replace("      timelineRange.value = safeIndex;", "      alignDynamicPlayer();\n      timelineRange.value = safeIndex;")
     output.write_text(document, encoding="utf-8")
 

@@ -33,26 +33,23 @@ function getDynamicFullRange(){
  if(!values.length)return {};
  const low=Math.min(...values),high=Math.max(...values),span=high-low;
  const pad=span>0?span*.02:Math.max(1,Math.abs(high)*.06);
- const target=(span+2*pad)/7,power=Math.pow(10,Math.floor(Math.log10(target)));
- const step=([1,2,2.5,5,10].find(n=>n*power>=target)||10)*power;
- dynamicFullRangeCache={min:Number((Math.floor((low-pad)/step)*step).toPrecision(12)),max:Number((Math.ceil((high+pad)/step)*step).toPrecision(12)),interval:step};
+ const target=(span+2*pad)/4,power=Math.pow(10,Math.floor(Math.log10(target)));
+ const steps=[1,2,2.5,5,10,20].map(n=>n*power);
+ let step=steps.find(n=>n>=target)||steps.at(-1),min,max;
+ for(const candidate of steps.filter(n=>n>=step)){
+  step=candidate;
+  min=Math.floor((low-pad)/(step/2))*(step/2);
+  max=min+4*step;
+  if(max>=high+pad)break;
+ }
+ dynamicFullRangeCache={min:Number(min.toPrecision(12)),max:Number(max.toPrecision(12)),interval:step};
  return dynamicFullRangeCache;
 }
 function getDynamicPlayerBottom(){return Math.ceil(document.getElementById('timelineBar').getBoundingClientRect().height)+24;}
-let dynamicPlayerGeometryKey='';
 function alignDynamicPlayer(){
- const width=chart.getWidth(),height=chart.getHeight(),key=width+'|'+height;
- if(dynamicPlayerGeometryKey===key)return;
- const layout=dynamicChartLayout(),y=(layout.gridTop+height-layout.gridBottom)/2;
- if(!chart.containPixel({gridIndex:0},[width/2,y]))return;
- let a=0,b=width/2;
- for(let i=0;i<14;i++){const mid=(a+b)/2;if(chart.containPixel({gridIndex:0},[mid,y]))b=mid;else a=mid;}
- const left=b;a=width/2;b=width;
- for(let i=0;i<14;i++){const mid=(a+b)/2;if(chart.containPixel({gridIndex:0},[mid,y]))a=mid;else b=mid;}
  const wrap=document.getElementById('wrap');
- wrap.style.setProperty('--dynamic-player-left',left.toFixed(2)+'px');
- wrap.style.setProperty('--dynamic-player-right',(width-a).toFixed(2)+'px');
- dynamicPlayerGeometryKey=key;
+ wrap.style.setProperty('--dynamic-player-left','0px');
+ wrap.style.setProperty('--dynamic-player-right','0px');
 }
 
 function updateMobileDynamicHeader(){
