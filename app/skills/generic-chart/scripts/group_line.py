@@ -773,7 +773,7 @@ svg{{display:block;width:100%;height:100%;overflow:visible}}
 .tooltip-value{{justify-self:end;text-align:right;margin-left:0;color:#fff;font-weight:650;font-variant-numeric:tabular-nums}}
 @media(min-width:1200px){{.chart-stage{{height:{max(220, int(config["height"]) - 82)}px}}}}
 @media(max-width:680px){{.group-line-component{{min-height:0;height:auto;padding:0}}.chart-title{{min-height:18px;max-height:42px;font-size:16px;line-height:1.25;padding:0}}.chart-subtitle{{font-size:12px}}.chart-tabs{{top:4px;right:0;gap:2px}}.chart-tab{{height:30px;min-width:44px;padding:0 8px;border-radius:8px;font-size:12px}}.chart-stage{{height:calc(clamp(242px,calc(100cqw / 2.72),306px) - 54px);min-height:188px;margin-top:4px}}.axis-label,.x-label{{font-size:10px;font-weight:400}}.chart-legend{{gap:8px 12px;min-height:0;margin-top:0;font-size:10px;align-content:center}}.legend-item{{gap:5px;max-width:42%;overflow:hidden;text-overflow:ellipsis}}.legend-dot{{width:8px;height:8px}}.chart-tooltip{{min-width:0;width:fit-content;max-width:calc(100vw - 24px);font-size:10px;padding:6px 8px;white-space:normal}}.tooltip-label{{min-width:0}}}}
-@media(max-width:680px){{.group-line-component.has-event-marks .chart-stage{{height:272px;min-height:272px}}}}
+@media(max-width:680px){{.group-line-component.has-event-marks .chart-stage{{height:344px;min-height:344px}}}}
 </style>
 </head>
 <body>
@@ -1308,27 +1308,48 @@ function segmentHitsBox(a,b,r) {{
   }}
   return true;
 }}
+function eventLabelNaturalWidth(overlay,dateText,titleText,availableWidth) {{
+  const fontSize=toNumber(overlay.fontSize,11),dateFontSize=toNumber(overlay.dateFontSize,Math.max(9,fontSize-1));
+  const weight=toNumber(overlay.titleFontWeight,600),dateWeight=toNumber(overlay.dateFontWeight,500);
+  const padding=toNumber(overlay.labelPaddingX,8);
+  const cap=Math.max(40,Math.min(toNumber(overlay.labelMaxWidth,210),availableWidth));
+  const lines=eventTextLines(titleText,cap-2*padding,fontSize,weight),dates=eventTextLines(dateText,cap-2*padding,dateFontSize,dateWeight);
+  return Math.min(cap,Math.max(Math.min(toNumber(overlay.labelMinWidth,108),cap),2*padding+Math.max(...lines.map(t=>eventTextWidth(t,fontSize,weight)),...dates.map(t=>eventTextWidth(t,dateFontSize,dateWeight)))));
+}}
+function eventLabelNaturalHeight(overlay,dateText,titleText,width) {{
+  const fontSize=toNumber(overlay.fontSize,11),dateFontSize=toNumber(overlay.dateFontSize,Math.max(9,fontSize-1));
+  const weight=toNumber(overlay.titleFontWeight,600),dateWeight=toNumber(overlay.dateFontWeight,500);
+  const textWidth=width-2*toNumber(overlay.labelPaddingX,8);
+  return 2*toNumber(overlay.labelPaddingY,6)+toNumber(overlay.labelLineGap,4)+eventTextLines(dateText,textWidth,dateFontSize,dateWeight).length*dateFontSize*1.3+eventTextLines(titleText,textWidth,fontSize,weight).length*fontSize*1.3;
+}}
 function drawEventLabel(parent,x,y,overlay,color,dateText,titleText,bounds) {{
   const inset=overlay.mobileGrid?8:12;
   bounds={{left:bounds.left+inset,right:bounds.right-inset,top:bounds.top+inset,bottom:bounds.bottom-inset}};
   const fontSize=toNumber(overlay.fontSize,11),dateFontSize=toNumber(overlay.dateFontSize,Math.max(9,fontSize-1));
   const weight=toNumber(overlay.titleFontWeight,600),dateWeight=toNumber(overlay.dateFontWeight,500);
   const px=toNumber(overlay.labelPaddingX,8),py=toNumber(overlay.labelPaddingY,6),lineGap=toNumber(overlay.labelLineGap,4);
-  const cap=Math.max(40,Math.min(toNumber(overlay.labelMaxWidth,210),bounds.right-bounds.left));
+  const cap=Math.max(40,Math.min(toNumber(overlay.timelineWidth,toNumber(overlay.labelMaxWidth,210)),bounds.right-bounds.left));
   const lines=eventTextLines(titleText,cap-2*px,fontSize,weight);
   const dates=eventTextLines(dateText,cap-2*px,dateFontSize,dateWeight);
-  const width=Math.min(cap,Math.max(Math.min(toNumber(overlay.labelMinWidth,108),cap),2*px+Math.max(...lines.map(t=>eventTextWidth(t,fontSize,weight)),...dates.map(t=>eventTextWidth(t,dateFontSize,dateWeight)))));
+  const width=Math.min(cap,Math.max(overlay.timelineWidth?cap:Math.min(toNumber(overlay.labelMinWidth,108),cap),2*px+Math.max(...lines.map(t=>eventTextWidth(t,fontSize,weight)),...dates.map(t=>eventTextWidth(t,dateFontSize,dateWeight)))));
   const titleHeight=fontSize*1.3,dateHeight=dateFontSize*1.3;
   const height=2*py+dates.length*dateHeight+lineGap+lines.length*titleHeight;
   const gap=toNumber(overlay.labelGap,12),preferBelow=overlay.labelPosition==='bottom';
-  const dxCandidates=overlay.mobileGrid?[bounds.left-(x-width/2),bounds.right-width-(x-width/2)]:[0,-width*.65,width*.65,-width*1.3,width*1.3,-width*2,width*2];
+  // Keep horizontal anchors chronological; solve collisions only vertically.
+  const anchorWidth=Math.min(bounds.right-bounds.left,toNumber(overlay.timelineWidth,210));
+  const center=Math.max(bounds.left+anchorWidth/2,Math.min(bounds.right-anchorWidth/2,x));
+  const bx=Math.max(bounds.left,Math.min(bounds.right-width,center-width/2));
+  const rowHeight=toNumber(overlay.timelineRowHeight,height);
+  const candidates=[];
+  for(let by=bounds.top;by<=bounds.bottom-rowHeight;by+=rowHeight+8)candidates.push(by);
+  if(!candidates.length)candidates.push(bounds.top);
   let best=null;
-  for(const below of [preferBelow,!preferBelow])for(const extra of [0,24,48,72,96,120])for(const dx of dxCandidates){{
-    const bx=Math.max(bounds.left,Math.min(bounds.right-width,x-width/2+(overlay.mobileGrid?0:toNumber(overlay.labelDx,0))+dx));
-    const by=overlay.mobileGrid?(below?bounds.bottom-height:bounds.top):Math.max(bounds.top,Math.min(bounds.bottom-height,below?y+gap+extra:y-gap-height-extra));
+  for(const candidate of candidates){{
+    const by=Math.max(bounds.top,Math.min(bounds.bottom-height,candidate));
+    const below=by+height/2>y;
     const r={{x:bx,y:by,w:width,h:height}},padded={{x:bx-4,y:by-4,w:width+8,h:height+8}};
     let score=Math.abs(bx+width/2-x)*.06+Math.abs(by+height/2-y)*.03+(below===preferBelow?0:2);
-    for(const old of eventLabelLayout.boxes){{const area=Math.max(0,Math.min(bx+width+4,old.x+old.w)-Math.max(bx-4,old.x))*Math.max(0,Math.min(by+height+4,old.y+old.h)-Math.max(by-4,old.y));if(area)score+=500+area;}}
+    for(const old of eventLabelLayout.boxes){{const area=Math.max(0,Math.min(bx+width+4,old.x+old.w)-Math.max(bx-4,old.x))*Math.max(0,Math.min(by+height+4,old.y+old.h)-Math.max(by-4,old.y));if(area)score+=1000000+area;}}
     for(const point of eventLabelLayout.points)if(point[0]>=padded.x&&point[0]<=padded.x+padded.w&&point[1]>=padded.y&&point[1]<=padded.y+padded.h)score+=80;
     for(const [a,b] of eventLabelLayout.segments)if(segmentHitsBox(a,b,padded))score+=40;
     if(!best||score<best.score)best={{...r,score}};
@@ -1370,11 +1391,14 @@ function drawMobileEventLabels(events,svg) {{
     mobileEventKey=keyOf(ordered[index]);
     labels.replaceChildren();eventLabelLayout.connectorLayer.replaceChildren();eventLabelLayout.boxes=[];
     const chosen=[...new Set([ordered.length-1,index,...ordered.map((_,i)=>i).reverse()])].slice(0,3);
-    chosen.forEach(i=>{{
+    const selected=chosen.map(i=>{{
       const args=[...ordered[i]];args[0]=labels;
-      args[3]={{...args[3],mobileGrid:true,labelMinWidth:96,labelMaxWidth:Math.min(136,(args[7].right-args[7].left-24)/2),fontSize:11,dateFontSize:10,borderColor:i===index?args[4]:undefined}};
-      drawEventLabel(...args);
-    }});
+      const labelWidth=Math.min(136,(args[7].right-args[7].left-24)/2);
+      args[3]={{...args[3],mobileGrid:true,timelineWidth:labelWidth,labelMinWidth:labelWidth,labelMaxWidth:labelWidth,fontSize:11,dateFontSize:10,borderColor:i===index?args[4]:undefined}};
+      return args;
+    }}).sort((a,b)=>a[1]-b[1]);
+    const rowHeight=Math.max(...selected.map(args=>eventLabelNaturalHeight(args[3],args[5],args[6],args[3].timelineWidth)));
+    selected.forEach(args=>{{args[3].timelineRowHeight=rowHeight;drawEventLabel(...args);}});
     rings.forEach((ring,i)=>ring.setAttribute('opacity',i===index?'1':'0'));
     hits.forEach((hit,i)=>hit.setAttribute('aria-pressed',String(i===index)));
     postChartHeight();
@@ -1700,7 +1724,14 @@ function render() {{
   }});
   eventLabelLayout.connectorLayer = svgEl('g', {{class:'event-label-connectors','pointer-events':'none'}});
   svg.appendChild(eventLabelLayout.connectorLayer);
-  if (!isMobile) pendingEventLabels.forEach(args => drawEventLabel(...args));
+  if (!isMobile && pendingEventLabels.length) {{
+    const labelWidth=Math.max(...pendingEventLabels.map(args=>eventLabelNaturalWidth(args[3],args[5],args[6],args[7].right-args[7].left-24)));
+    const rowHeight=Math.max(...pendingEventLabels.map(args=>eventLabelNaturalHeight(args[3],args[5],args[6],labelWidth)));
+    pendingEventLabels.sort((a,b)=>a[1]-b[1]).forEach(args=>{{
+      args[3]={{...args[3],timelineWidth:labelWidth,timelineRowHeight:rowHeight}};
+      drawEventLabel(...args);
+    }});
+  }}
   rows.forEach((row, index) => {{
     const x = hoverStartX(index);
     const hitWidth = hoverWidthFor(index);
