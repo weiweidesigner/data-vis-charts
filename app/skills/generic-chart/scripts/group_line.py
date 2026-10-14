@@ -773,13 +773,7 @@ svg{{display:block;width:100%;height:100%;overflow:visible}}
 .tooltip-value{{justify-self:end;text-align:right;margin-left:0;color:#fff;font-weight:650;font-variant-numeric:tabular-nums}}
 @media(min-width:1200px){{.chart-stage{{height:{max(220, int(config["height"]) - 82)}px}}}}
 @media(max-width:680px){{.group-line-component{{min-height:0;height:auto;padding:0}}.chart-title{{min-height:18px;max-height:42px;font-size:16px;line-height:1.25;padding:0}}.chart-subtitle{{font-size:12px}}.chart-tabs{{top:4px;right:0;gap:2px}}.chart-tab{{height:30px;min-width:44px;padding:0 8px;border-radius:8px;font-size:12px}}.chart-stage{{height:calc(clamp(242px,calc(100cqw / 2.72),306px) - 54px);min-height:188px;margin-top:4px}}.axis-label,.x-label{{font-size:10px;font-weight:400}}.chart-legend{{gap:8px 12px;min-height:0;margin-top:0;font-size:10px;align-content:center}}.legend-item{{gap:5px;max-width:42%;overflow:hidden;text-overflow:ellipsis}}.legend-dot{{width:8px;height:8px}}.chart-tooltip{{min-width:0;width:fit-content;max-width:calc(100vw - 24px);font-size:10px;padding:6px 8px;white-space:normal}}.tooltip-label{{min-width:0}}}}
- .mobile-event-detail{{margin:10px 0 0;padding:12px;border:1px solid var(--chart-border-default);border-radius:10px;background:var(--chart-point-fill);color:var(--chart-text-primary);font-size:14px;line-height:1.5}}
-.mobile-event-detail[hidden]{{display:none}}
-.mobile-event-date{{color:var(--chart-text-secondary);font-size:12px;margin:0 0 4px}}
-.mobile-event-title{{margin:0;font-weight:600;overflow-wrap:anywhere}}
-.mobile-event-tabs{{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}}
-.mobile-event-tabs button{{border:1px solid var(--chart-border-default);border-radius:6px;background:transparent;color:var(--chart-text-secondary);padding:5px 8px;font:inherit;font-size:12px;touch-action:manipulation}}
-.mobile-event-tabs button[aria-pressed="true"]{{color:var(--chart-text-primary);border-color:var(--event-color);background:var(--chart-surface-muted)}}
+@media(max-width:680px){{.group-line-component.has-event-marks .chart-stage{{height:272px;min-height:272px}}}}
 </style>
 </head>
 <body>
@@ -788,7 +782,6 @@ svg{{display:block;width:100%;height:100%;overflow:visible}}
   <p class="chart-subtitle"></p>
   <div class="chart-tabs" role="tablist"></div>
   <div class="chart-stage"><svg role="img" aria-label="{page_title}"></svg></div>
-  <section class="mobile-event-detail" hidden aria-label="事件说明"></section>
   <div class="chart-legend"></div>
   <div class="chart-tooltip"></div>
 </section>
@@ -1326,13 +1319,14 @@ function drawEventLabel(parent,x,y,overlay,color,dateText,titleText,bounds) {{
   const titleHeight=fontSize*1.3,dateHeight=dateFontSize*1.3;
   const height=2*py+dates.length*dateHeight+lineGap+lines.length*titleHeight;
   const gap=toNumber(overlay.labelGap,12),preferBelow=overlay.labelPosition==='bottom';
+  const dxCandidates=overlay.mobileGrid?[bounds.left-(x-width/2),bounds.right-width-(x-width/2)]:[0,-width*.65,width*.65,-width*1.3,width*1.3,-width*2,width*2];
   let best=null;
-  for(const below of [preferBelow,!preferBelow])for(const extra of [0,24,48,72])for(const dx of [0,-width*.65,width*.65]){{
-    const bx=Math.max(bounds.left,Math.min(bounds.right-width,x-width/2+toNumber(overlay.labelDx,0)+dx));
-    const by=Math.max(bounds.top,Math.min(bounds.bottom-height,below?y+gap+extra:y-gap-height-extra));
+  for(const below of [preferBelow,!preferBelow])for(const extra of [0,24,48,72,96,120])for(const dx of dxCandidates){{
+    const bx=Math.max(bounds.left,Math.min(bounds.right-width,x-width/2+(overlay.mobileGrid?0:toNumber(overlay.labelDx,0))+dx));
+    const by=overlay.mobileGrid?(below?bounds.bottom-height:bounds.top):Math.max(bounds.top,Math.min(bounds.bottom-height,below?y+gap+extra:y-gap-height-extra));
     const r={{x:bx,y:by,w:width,h:height}},padded={{x:bx-4,y:by-4,w:width+8,h:height+8}};
     let score=Math.abs(bx+width/2-x)*.06+Math.abs(by+height/2-y)*.03+(below===preferBelow?0:2);
-    for(const old of eventLabelLayout.boxes){{const area=Math.max(0,Math.min(bx+width,old.x+old.w)-Math.max(bx,old.x))*Math.max(0,Math.min(by+height,old.y+old.h)-Math.max(by,old.y));if(area)score+=500+area;}}
+    for(const old of eventLabelLayout.boxes){{const area=Math.max(0,Math.min(bx+width+4,old.x+old.w)-Math.max(bx-4,old.x))*Math.max(0,Math.min(by+height+4,old.y+old.h)-Math.max(by-4,old.y));if(area)score+=500+area;}}
     for(const point of eventLabelLayout.points)if(point[0]>=padded.x&&point[0]<=padded.x+padded.w&&point[1]>=padded.y&&point[1]<=padded.y+padded.h)score+=80;
     for(const [a,b] of eventLabelLayout.segments)if(segmentHitsBox(a,b,padded))score+=40;
     if(!best||score<best.score)best={{...r,score}};
@@ -1349,28 +1343,38 @@ function drawEventLabel(parent,x,y,overlay,color,dateText,titleText,bounds) {{
 function shouldShowLineLegend(series){{
   return visual.legend.visible!==false && (series.length>1 || config.visualStyle?.legend?.visible===true);
 }}
+function eventMarkColor(overlay,lineColor) {{
+  const hue=color=>{{
+    let raw=String(color||'').replace('#','');if(raw.length===3)raw=[...raw].map(c=>c+c).join('');
+    if(!/^[0-9a-f]{{6}}$/i.test(raw))return null;
+    const [r,g,b]=[0,2,4].map(i=>parseInt(raw.slice(i,i+2),16)/255),max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;
+    if(d<.12)return null;
+    return (((max===r?(g-b)/d:max===g?(b-r)/d+2:(r-g)/d+4)*60)%360+360)%360;
+  }};
+  const lineHue=hue(lineColor),given=overlay.color,markHue=hue(given);
+  if(given && String(given).toLowerCase()!==String(lineColor).toLowerCase() && (lineHue===null||markHue===null||Math.min(Math.abs(lineHue-markHue),360-Math.abs(lineHue-markHue))>=40))return given;
+  return lineHue!==null && lineHue>=160 && lineHue<=310?'#f97316':'#8b5cf6';
+}}
 let mobileEventKey='';
-function drawMobileEventDetails(events,svg) {{
-  const detail=root.querySelector('.mobile-event-detail');
-  detail.setAttribute('aria-label',formatterLocale()==='zh-CN'?'事件说明':'Event details');
-  detail.hidden=!events.length;
-  detail.replaceChildren();
+function drawMobileEventLabels(events,svg) {{
   if(!events.length)return;
-  const ordered=[...events].sort((a,b)=>a[1]-b[1]);
-  const keyOf=e=>`${{e[5]}}|${{e[6]}}`;
-  let active=Math.max(0,ordered.findIndex(e=>keyOf(e)===mobileEventKey));
-  if(!mobileEventKey||!ordered.some(e=>keyOf(e)===mobileEventKey))active=ordered.length-1;
-  const date=document.createElement('p');date.className='mobile-event-date';
-  const title=document.createElement('p');title.className='mobile-event-title';
-  const tabs=document.createElement('div');tabs.className='mobile-event-tabs';tabs.setAttribute('aria-label',formatterLocale()==='zh-CN'?'选择事件':'Select an event');
-  detail.append(date,title,tabs);
-  const rings=[],buttons=[];
+  const ordered=[...events].sort((a,b)=>a[1]-b[1]),keyOf=e=>`${{e[5]}}|${{e[6]}}`;
+  let active=ordered.findIndex(e=>keyOf(e)===mobileEventKey);
+  if(active<0)active=ordered.length-1;
+  const labels=svgEl('g',{{class:'mobile-event-labels','pointer-events':'none'}});
+  svg.appendChild(labels);
+  const rings=[],hits=[];
   const select=index=>{{
-    const event=ordered[index];mobileEventKey=keyOf(event);
-    date.textContent=`${{event[5]}} · ${{index+1}}/${{ordered.length}}`;
-    title.textContent=event[6];detail.style.setProperty('--event-color',event[4]);
+    mobileEventKey=keyOf(ordered[index]);
+    labels.replaceChildren();eventLabelLayout.connectorLayer.replaceChildren();eventLabelLayout.boxes=[];
+    const chosen=[...new Set([ordered.length-1,index,...ordered.map((_,i)=>i).reverse()])].slice(0,3);
+    chosen.forEach(i=>{{
+      const args=[...ordered[i]];args[0]=labels;
+      args[3]={{...args[3],mobileGrid:true,labelMinWidth:96,labelMaxWidth:Math.min(136,(args[7].right-args[7].left-8)/2),fontSize:11,dateFontSize:10,borderColor:i===index?args[4]:undefined}};
+      drawEventLabel(...args);
+    }});
     rings.forEach((ring,i)=>ring.setAttribute('opacity',i===index?'1':'0'));
-    buttons.forEach((button,i)=>button.setAttribute('aria-pressed',String(i===index)));
+    hits.forEach((hit,i)=>hit.setAttribute('aria-pressed',String(i===index)));
     postChartHeight();
   }};
   ordered.forEach((event,index)=>{{
@@ -1380,8 +1384,7 @@ function drawMobileEventDetails(events,svg) {{
     hit.addEventListener('pointerdown',event=>{{event.stopPropagation();hideTooltip();select(index);}});
     hit.addEventListener('click',event=>{{event.stopPropagation();select(index);}});
     hit.addEventListener('keydown',event=>{{if(event.key==='Enter'||event.key===' '){{event.preventDefault();select(index);}}}});
-    rings.push(ring);svg.append(ring,hit);
-    const button=document.createElement('button');button.type='button';button.textContent=dateText;button.onclick=()=>{{hideTooltip();select(index);}};buttons.push(button);tabs.append(button);
+    rings.push(ring);hits.push(hit);svg.append(ring,hit);
   }});
   select(active);
 }}
@@ -1458,6 +1461,7 @@ function render() {{
   svg.innerHTML = '';
   legend.innerHTML = '';
   const width = Math.max(svg.clientWidth || 900, toNumber(visual.chart.minWidth, 360));
+  root.classList.toggle('has-event-marks', (Array.isArray(visual.overlays)?visual.overlays:[]).some(item=>item.labelBox||item.eventTitle||item.eventTime));
   const height = Math.max(svg.clientHeight || (toNumber(visual.chart.height, config.height) - 58), 160);
   svg.setAttribute('viewBox', `0 0 ${{width}} ${{height}}`);
   const isMobile = width < 680;
@@ -1667,7 +1671,8 @@ function render() {{
       if (!match) return;
       const x = centerX(index);
       const y = yFor(targetSeries)(targetValue);
-      const color = overlay.color || targetSeries.color || '#ef4444';
+      const color = eventMarkColor(overlay, targetSeries.color);
+      const eventOverlay = {{...overlay,connectorColor:eventMarkColor({{color:overlay.connectorColor||color}},targetSeries.color)}};
       drawMarker(svg, x, y, overlay, color);
       const label = overlay.eventTitle || overlay.eventLabel || overlay.pointLabel || overlay.label;
       if (label || overlay.labelTemplate || overlay.labelBox) {{
@@ -1679,7 +1684,7 @@ function render() {{
         const text = formatOverlayText(overlay.labelTemplate || label || '');
         if (overlay.labelBox || overlay.eventTime || overlay.eventTitle) {{
           pendingEventLabels.push([
-            svg, x, y, overlay, color,
+            svg, x, y, eventOverlay, color,
             formatOverlayText(overlay.eventTime || overlay.dateLabel || '{{date}}'),
             text,
             {{ left: margin.left, right: margin.left + plotW, top: margin.top, bottom: margin.top + plotH }}
@@ -1703,8 +1708,7 @@ function render() {{
     hit.addEventListener('mouseleave', hideTooltip);
     svg.appendChild(hit);
   }});
-  if (isMobile) drawMobileEventDetails(pendingEventLabels, svg);
-  else {{ const detail=root.querySelector('.mobile-event-detail');detail.hidden=true;detail.replaceChildren(); }}
+  if (isMobile) drawMobileEventLabels(pendingEventLabels, svg);
   drawSvgLegend(series, width, height, legendTopY);
 }}
 function tooltipBounds(anchorX, tooltipWidth, viewportLeft = 0, viewportRight = window.innerWidth, safeDistance = 0) {{
