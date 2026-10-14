@@ -1281,65 +1281,68 @@ function drawMarker(parent, x, y, overlay, color) {{
   }}
   parent.appendChild(svgEl('circle', {{ cx: x, cy: y, r: radius, fill: color, stroke: overlay.stroke || '#fff', 'stroke-width': toNumber(overlay.strokeWidth, 1.5) }}));
 }}
-function drawEventLabel(parent, x, y, overlay, color, dateText, titleText, bounds) {{
-  const fontSize = toNumber(overlay.fontSize, 11);
-  const dateFontSize = toNumber(overlay.dateFontSize, Math.max(9, fontSize - 1));
-  const paddingX = toNumber(overlay.labelPaddingX, 8);
-  const paddingY = toNumber(overlay.labelPaddingY, 6);
-  const lineGap = toNumber(overlay.labelLineGap, 4);
-  const minWidth = toNumber(overlay.labelMinWidth, 108);
-  const maxWidth = toNumber(overlay.labelMaxWidth, 210);
-  const titleLimit = Math.max(8, Math.floor((maxWidth - paddingX * 2) / Math.max(6, fontSize * 0.58)));
-  const compactTitle = String(titleText || '').length > titleLimit
-    ? `${{String(titleText || '').slice(0, Math.max(1, titleLimit - 1))}}…`
-    : String(titleText || '');
-  const estimatedTextWidth = Math.max(String(dateText || '').length * dateFontSize * 0.58, compactTitle.length * fontSize * 0.62);
-  const width = Math.min(maxWidth, Math.max(minWidth, estimatedTextWidth + paddingX * 2));
-  const height = paddingY * 2 + dateFontSize + lineGap + fontSize;
-  const gap = toNumber(overlay.labelGap, 12);
-  const preferred = String(overlay.labelPosition || 'top').toLowerCase();
-  let placeBelow = preferred === 'bottom';
-  if (!placeBelow && y - gap - height < bounds.top) placeBelow = true;
-  if (placeBelow && y + gap + height > bounds.bottom && y - gap - height >= bounds.top) placeBelow = false;
-  const centerX = Math.min(bounds.right - width / 2, Math.max(bounds.left + width / 2, x + toNumber(overlay.labelDx, 0)));
-  const boxY = placeBelow ? y + gap : y - gap - height;
-  const anchorY = placeBelow ? boxY : boxY + height;
-  const markerEdgeY = y + (placeBelow ? toNumber(overlay.radius, 4.2) : -toNumber(overlay.radius, 4.2));
-  parent.appendChild(svgEl('line', {{
-    x1: x, y1: markerEdgeY, x2: centerX, y2: anchorY,
-    stroke: overlay.connectorColor || overlay.borderColor || color,
-    'stroke-width': toNumber(overlay.connectorWidth, 1),
-    'stroke-dasharray': overlay.connectorDasharray || '',
-    opacity: toNumber(overlay.connectorOpacity, 0.8),
-    'pointer-events': 'none'
-  }}));
-  const group = svgEl('g', {{ class: 'event-label-box', 'pointer-events': 'none' }});
-  group.appendChild(svgEl('rect', {{
-    x: centerX - width / 2, y: boxY, width, height,
-    rx: toNumber(overlay.labelBorderRadius, 4),
-    fill: overlay.labelBackground || '#ffffff',
-    stroke: overlay.borderColor || '#d0d5dd',
-    'stroke-width': toNumber(overlay.labelBorderWidth, 1),
-    opacity: toNumber(overlay.labelOpacity, 0.98)
-  }}));
-  group.appendChild(svgEl('text', {{
-    x: centerX - width / 2 + paddingX,
-    y: boxY + paddingY + dateFontSize - 1,
-    fill: overlay.dateColor || '#667085',
-    'font-size': dateFontSize,
-    'font-weight': toNumber(overlay.dateFontWeight, 500)
-  }}, String(dateText || '')));
-  group.appendChild(svgEl('text', {{
-    x: centerX - width / 2 + paddingX,
-    y: boxY + paddingY + dateFontSize + lineGap + fontSize - 1,
-    fill: overlay.titleColor || overlay.labelColor || '#101828',
-    'font-size': fontSize,
-    'font-weight': toNumber(overlay.titleFontWeight, 600)
-  }}, compactTitle));
+let eventLabelLayout = {{points:[], segments:[], boxes:[]}};
+function eventTextWidth(text, size, weight) {{
+  const canvas=eventTextWidth.canvas||(eventTextWidth.canvas=document.createElement('canvas'));
+  const ctx=canvas.getContext('2d');
+  ctx.font=`${{weight}} ${{size}}px ${{getComputedStyle(root).fontFamily}}`;
+  return ctx.measureText(String(text||'')).width;
+}}
+function eventTextLines(text, maxWidth, size, weight) {{
+  const tokens=String(text||'').match(/[-+]?\\d+(?:\\.\\d+)?%?|[A-Za-z]+|./gu)||[];
+  const lines=[];let line='';
+  for(const token of tokens){{
+    if(line && eventTextWidth(line+token,size,weight)>maxWidth){{lines.push(line);line='';}}
+    line+=token;
+  }}
+  if(line)lines.push(line);
+  return lines.length?lines:[''];
+}}
+function segmentHitsBox(a,b,r) {{
+  let lo=0,hi=1;const dx=b[0]-a[0],dy=b[1]-a[1];
+  for(const [p,q] of [[-dx,a[0]-r.x],[dx,r.x+r.w-a[0]],[-dy,a[1]-r.y],[dy,r.y+r.h-a[1]]]){{
+    if(p===0){{if(q<0)return false;continue;}}
+    const t=q/p;if(p<0)lo=Math.max(lo,t);else hi=Math.min(hi,t);
+    if(lo>hi)return false;
+  }}
+  return true;
+}}
+function drawEventLabel(parent,x,y,overlay,color,dateText,titleText,bounds) {{
+  const fontSize=toNumber(overlay.fontSize,11),dateFontSize=toNumber(overlay.dateFontSize,Math.max(9,fontSize-1));
+  const weight=toNumber(overlay.titleFontWeight,600),dateWeight=toNumber(overlay.dateFontWeight,500);
+  const px=toNumber(overlay.labelPaddingX,8),py=toNumber(overlay.labelPaddingY,6),lineGap=toNumber(overlay.labelLineGap,4);
+  const cap=Math.max(40,Math.min(toNumber(overlay.labelMaxWidth,210),bounds.right-bounds.left));
+  const lines=eventTextLines(titleText,cap-2*px,fontSize,weight);
+  const dates=eventTextLines(dateText,cap-2*px,dateFontSize,dateWeight);
+  const width=Math.min(cap,Math.max(Math.min(toNumber(overlay.labelMinWidth,108),cap),2*px+Math.max(...lines.map(t=>eventTextWidth(t,fontSize,weight)),...dates.map(t=>eventTextWidth(t,dateFontSize,dateWeight)))));
+  const titleHeight=fontSize*1.3,dateHeight=dateFontSize*1.3;
+  const height=2*py+dates.length*dateHeight+lineGap+lines.length*titleHeight;
+  const gap=toNumber(overlay.labelGap,12),preferBelow=overlay.labelPosition==='bottom';
+  let best=null;
+  for(const below of [preferBelow,!preferBelow])for(const extra of [0,24,48,72])for(const dx of [0,-width*.65,width*.65]){{
+    const bx=Math.max(bounds.left,Math.min(bounds.right-width,x-width/2+toNumber(overlay.labelDx,0)+dx));
+    const by=Math.max(bounds.top,Math.min(bounds.bottom-height,below?y+gap+extra:y-gap-height-extra));
+    const r={{x:bx,y:by,w:width,h:height}},padded={{x:bx-4,y:by-4,w:width+8,h:height+8}};
+    let score=Math.abs(bx+width/2-x)*.06+Math.abs(by+height/2-y)*.03+(below===preferBelow?0:2);
+    for(const old of eventLabelLayout.boxes){{const area=Math.max(0,Math.min(bx+width,old.x+old.w)-Math.max(bx,old.x))*Math.max(0,Math.min(by+height,old.y+old.h)-Math.max(by,old.y));if(area)score+=500+area;}}
+    for(const point of eventLabelLayout.points)if(point[0]>=padded.x&&point[0]<=padded.x+padded.w&&point[1]>=padded.y&&point[1]<=padded.y+padded.h)score+=80;
+    for(const [a,b] of eventLabelLayout.segments)if(segmentHitsBox(a,b,padded))score+=40;
+    if(!best||score<best.score)best={{...r,score}};
+  }}
+  eventLabelLayout.boxes.push(best);
+  const below=best.y+height/2>y,anchorY=below?best.y:best.y+height;
+  parent.appendChild(svgEl('line',{{x1:x,y1:y+(below?1:-1)*toNumber(overlay.radius,4.2),x2:Math.max(best.x+px,Math.min(best.x+width-px,x)),y2:anchorY,stroke:overlay.connectorColor||overlay.borderColor||color,'stroke-width':toNumber(overlay.connectorWidth,1),opacity:toNumber(overlay.connectorOpacity,.8),'pointer-events':'none'}}));
+  const group=svgEl('g',{{class:'event-label-box','pointer-events':'none'}});
+  group.appendChild(svgEl('rect',{{x:best.x,y:best.y,width,height,rx:toNumber(overlay.labelBorderRadius,4),fill:overlay.labelBackground||'var(--chart-point-fill)',stroke:overlay.borderColor||'#d0d5dd','stroke-width':toNumber(overlay.labelBorderWidth,1),opacity:toNumber(overlay.labelOpacity,.98)}}));
+  dates.forEach((t,i)=>group.appendChild(svgEl('text',{{x:best.x+px,y:best.y+py+dateFontSize+i*dateHeight,fill:overlay.dateColor||'var(--chart-text-secondary)','font-size':dateFontSize,'font-weight':dateWeight}},t)));
+  lines.forEach((t,i)=>group.appendChild(svgEl('text',{{x:best.x+px,y:best.y+py+dates.length*dateHeight+lineGap+fontSize+i*titleHeight,fill:overlay.titleColor||overlay.labelColor||'var(--chart-text-primary)','font-size':fontSize,'font-weight':weight}},t)));
   parent.appendChild(group);
 }}
+function shouldShowLineLegend(series){{
+  return visual.legend.visible!==false && (series.length>1 || config.visualStyle?.legend?.visible===true);
+}}
 function drawSvgLegend(series, width, height, topY = null) {{
-  if (visual.legend.visible === false) {{
+  if (!shouldShowLineLegend(series)) {{
     legend.style.display = 'none';
     return;
   }}
@@ -1417,6 +1420,8 @@ function render() {{
   const safeInset = 12;
   const rows = Array.isArray(config.data) ? config.data : [];
   const series = styledSeries();
+  eventLabelLayout = {{points:[],segments:[],boxes:[]}};
+  const pendingEventLabels = [];
   if (!rows.length || !series.length) return;
   const leftAxis = axisConfig('left');
   const rightAxis = axisConfig('right');
@@ -1460,13 +1465,13 @@ function render() {{
   const leftTickWidth = showLeftAxis ? measureAxisWidth(leftTickLabels, visual.yAxis.fontSize, visual.yAxis.fontWeight) : 0;
   const rightTickWidth = showRightAxis ? measureAxisWidth(rightTickLabels, visual.yAxis.fontSize, visual.yAxis.fontWeight) : 0;
   if (showLeftAxis) margin.left = Math.max(margin.left, leftTickWidth + (isMobile ? 6 : 10));
-  if (!showLeftAxis) margin.left = 0;
+  if (!showLeftAxis) margin.left = safeInset;
   if (showRightAxis) margin.right = Math.max(0, rightTickWidth + rightAxisGap);
   if (leftAxisLegend || rightAxisLegend) {{
     const axisFontSize = toNumber(visual.yAxis.fontSize, 12);
     margin.top = Math.max(margin.top, axisFontSize * 2 + 12);
   }}
-  if (visual.legend.visible !== false) {{
+  if (shouldShowLineLegend(series)) {{
     const estimatedLegendRows = isMobile && series.length > 2 ? 2 : 1;
     const xAxisFontSize = toNumber(visual.xAxis.fontSize, 10);
     const legendFontSize = toNumber(visual.legend.fontSize, 10);
@@ -1560,6 +1565,8 @@ function render() {{
       const value = number(row[item.field]);
       return value === null ? null : [centerX(index), yFor(item)(value), value, row, index];
     }});
+    eventLabelLayout.points.push(...points.filter(Boolean));
+    for(let i=1;i<points.length;i++) if(points[i-1]&&points[i]) eventLabelLayout.segments.push([points[i-1],points[i]]);
     const path = svgEl('path', {{
       d: pathFromPoints(points, visual.line.curve),
       stroke: item.color,
@@ -1627,12 +1634,12 @@ function render() {{
           .replaceAll('{{markerValue}}', sourceValue === null ? '' : String(sourceValue));
         const text = formatOverlayText(overlay.labelTemplate || label || '');
         if (overlay.labelBox || overlay.eventTime || overlay.eventTitle) {{
-          drawEventLabel(
+          pendingEventLabels.push([
             svg, x, y, overlay, color,
             formatOverlayText(overlay.eventTime || overlay.dateLabel || '{{date}}'),
             text,
             {{ left: margin.left, right: margin.left + plotW, top: margin.top, bottom: margin.top + plotH }}
-          );
+          ]);
         }} else {{
           svg.appendChild(svgEl('text', {{ x: x + toNumber(overlay.labelDx, 6), y: y - toNumber(overlay.labelDy, 8), class: 'overlay-label', fill: overlay.labelColor || color, 'font-size': toNumber(overlay.fontSize, 11) }}, text));
         }}
@@ -1640,6 +1647,7 @@ function render() {{
       shown += 1;
     }});
   }});
+  pendingEventLabels.forEach(args => drawEventLabel(...args));
   rows.forEach((row, index) => {{
     const x = hoverStartX(index);
     const hitWidth = hoverWidthFor(index);
