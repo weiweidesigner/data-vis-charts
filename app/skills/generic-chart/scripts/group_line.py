@@ -1309,6 +1309,8 @@ function segmentHitsBox(a,b,r) {{
   return true;
 }}
 function drawEventLabel(parent,x,y,overlay,color,dateText,titleText,bounds) {{
+  const inset=overlay.mobileGrid?8:12;
+  bounds={{left:bounds.left+inset,right:bounds.right-inset,top:bounds.top+inset,bottom:bounds.bottom-inset}};
   const fontSize=toNumber(overlay.fontSize,11),dateFontSize=toNumber(overlay.dateFontSize,Math.max(9,fontSize-1));
   const weight=toNumber(overlay.titleFontWeight,600),dateWeight=toNumber(overlay.dateFontWeight,500);
   const px=toNumber(overlay.labelPaddingX,8),py=toNumber(overlay.labelPaddingY,6),lineGap=toNumber(overlay.labelLineGap,4);
@@ -1370,7 +1372,7 @@ function drawMobileEventLabels(events,svg) {{
     const chosen=[...new Set([ordered.length-1,index,...ordered.map((_,i)=>i).reverse()])].slice(0,3);
     chosen.forEach(i=>{{
       const args=[...ordered[i]];args[0]=labels;
-      args[3]={{...args[3],mobileGrid:true,labelMinWidth:96,labelMaxWidth:Math.min(136,(args[7].right-args[7].left-8)/2),fontSize:11,dateFontSize:10,borderColor:i===index?args[4]:undefined}};
+      args[3]={{...args[3],mobileGrid:true,labelMinWidth:96,labelMaxWidth:Math.min(136,(args[7].right-args[7].left-24)/2),fontSize:11,dateFontSize:10,borderColor:i===index?args[4]:undefined}};
       drawEventLabel(...args);
     }});
     rings.forEach((ring,i)=>ring.setAttribute('opacity',i===index?'1':'0'));
