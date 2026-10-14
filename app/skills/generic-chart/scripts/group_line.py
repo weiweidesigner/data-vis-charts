@@ -1331,7 +1331,7 @@ function drawEventLabel(parent,x,y,overlay,color,dateText,titleText,bounds) {{
   }}
   eventLabelLayout.boxes.push(best);
   const below=best.y+height/2>y,anchorY=below?best.y:best.y+height;
-  parent.appendChild(svgEl('line',{{x1:x,y1:y+(below?1:-1)*toNumber(overlay.radius,4.2),x2:Math.max(best.x+px,Math.min(best.x+width-px,x)),y2:anchorY,stroke:overlay.connectorColor||overlay.borderColor||color,'stroke-width':toNumber(overlay.connectorWidth,1),opacity:toNumber(overlay.connectorOpacity,.8),'pointer-events':'none'}}));
+  (eventLabelLayout.connectorLayer || parent).appendChild(svgEl('line',{{x1:x,y1:y+(below?1:-1)*toNumber(overlay.radius,4.2),x2:Math.max(best.x+px,Math.min(best.x+width-px,x)),y2:anchorY,stroke:overlay.connectorColor||overlay.borderColor||color,'stroke-width':toNumber(overlay.connectorWidth,1),opacity:toNumber(overlay.connectorOpacity,.8),'pointer-events':'none'}}));
   const group=svgEl('g',{{class:'event-label-box','pointer-events':'none'}});
   group.appendChild(svgEl('rect',{{x:best.x,y:best.y,width,height,rx:toNumber(overlay.labelBorderRadius,4),fill:overlay.labelBackground||'var(--chart-point-fill)',stroke:overlay.borderColor||'#d0d5dd','stroke-width':toNumber(overlay.labelBorderWidth,1),opacity:toNumber(overlay.labelOpacity,.98)}}));
   dates.forEach((t,i)=>group.appendChild(svgEl('text',{{x:best.x+px,y:best.y+py+dateFontSize+i*dateHeight,fill:overlay.dateColor||'var(--chart-text-secondary)','font-size':dateFontSize,'font-weight':dateWeight}},t)));
@@ -1647,6 +1647,8 @@ function render() {{
       shown += 1;
     }});
   }});
+  eventLabelLayout.connectorLayer = svgEl('g', {{class:'event-label-connectors','pointer-events':'none'}});
+  svg.appendChild(eventLabelLayout.connectorLayer);
   pendingEventLabels.forEach(args => drawEventLabel(...args));
   rows.forEach((row, index) => {{
     const x = hoverStartX(index);
