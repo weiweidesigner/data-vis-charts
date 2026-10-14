@@ -1,5 +1,6 @@
 <style id="dynamicLineMobileLayout">
 .mobileDynamicHeader{display:none}
+#wrap #timelineBar{left:var(--dynamic-player-left,0px)!important;right:var(--dynamic-player-right,0px)!important}
 @media(max-width:720px){
  #wrap{height:var(--mobile-dynamic-height,380px)!important;min-height:0!important}
  .mobileDynamicHeader{display:block;position:absolute;left:0;right:0;top:0;z-index:2}
@@ -10,7 +11,7 @@
  .mobileDynamicLegend span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .mobileDynamicLegend b{margin-left:1px;font-weight:500;flex-shrink:0;font-variant-numeric:tabular-nums}
  .mobileDynamicLegend button[aria-pressed="false"]{opacity:.4}
- #timelineBar{left:6px!important;right:6px!important;bottom:6px!important;gap:6px!important;padding:6px 8px!important;box-sizing:border-box;min-width:0;max-width:calc(100% - 12px)}
+ #timelineBar{left:var(--dynamic-player-left,0px)!important;right:var(--dynamic-player-right,0px)!important;bottom:8px!important;gap:6px!important;padding:6px 8px!important;box-sizing:border-box;min-width:0;max-width:100%}
  #timelineBar #playBtn{box-shadow:0 2px 8px rgba(37,99,235,.24)!important}
  #timelineBar .timeLabel{min-width:22px!important}
  #timelineBar #playBtn,#timelineBar .pillBtn{flex-shrink:0}
@@ -18,6 +19,35 @@
 </style>
 <script>
 const mobileLegendSelection={};
+
+let dynamicFullRangeCache=null;
+function getDynamicFullRange(){
+ if(dynamicFullRangeCache)return dynamicFullRangeCache;
+ const values=Object.values(fullSeriesDataMap).flat().filter(value=>value!==null&&value!==undefined&&value!=='').map(Number).filter(Number.isFinite);
+ if(!values.length)return {};
+ const low=Math.min(...values),high=Math.max(...values),span=high-low;
+ const pad=span>0?span*.06:Math.max(1,Math.abs(high)*.06);
+ const step=span>0?Math.pow(10,Math.floor(Math.log10(span))-2):.01;
+ dynamicFullRangeCache={min:Number((Math.floor((low-pad)/step)*step).toPrecision(12)),max:Number((Math.ceil((high+pad)/step)*step).toPrecision(12))};
+ return dynamicFullRangeCache;
+}
+function getDynamicPlayerBottom(){return Math.ceil(document.getElementById('timelineBar').getBoundingClientRect().height)+24;}
+let dynamicPlayerGeometryKey='';
+function alignDynamicPlayer(){
+ const width=chart.getWidth(),height=chart.getHeight(),key=width+'|'+height;
+ if(dynamicPlayerGeometryKey===key)return;
+ const layout=dynamicChartLayout(),y=(layout.gridTop+height-layout.gridBottom)/2;
+ if(!chart.containPixel({gridIndex:0},[width/2,y]))return;
+ let a=0,b=width/2;
+ for(let i=0;i<14;i++){const mid=(a+b)/2;if(chart.containPixel({gridIndex:0},[mid,y]))b=mid;else a=mid;}
+ const left=b;a=width/2;b=width;
+ for(let i=0;i<14;i++){const mid=(a+b)/2;if(chart.containPixel({gridIndex:0},[mid,y]))a=mid;else b=mid;}
+ const wrap=document.getElementById('wrap');
+ wrap.style.setProperty('--dynamic-player-left',left.toFixed(2)+'px');
+ wrap.style.setProperty('--dynamic-player-right',(width-a).toFixed(2)+'px');
+ dynamicPlayerGeometryKey=key;
+}
+
 function updateMobileDynamicHeader(){
  let header=document.querySelector('.mobileDynamicHeader');
  if(!header){header=document.createElement('div');header.className='mobileDynamicHeader';document.getElementById('wrap').append(header);}
@@ -34,7 +64,7 @@ function updateMobileDynamicHeader(){
   button.append(marker,label,value);button.onclick=()=>{mobileLegendSelection[name]=mobileLegendSelection[name]===false;renderChart();};legend.append(button);
  });
  header.append(legend);
- const height=Math.ceil(header.getBoundingClientRect().height)+250+52;
+ const height=Math.ceil(header.getBoundingClientRect().height)+250+10+getDynamicPlayerBottom();
  const wrap=document.getElementById('wrap');
  if(wrap.style.getPropertyValue('--mobile-dynamic-height')!==height+'px'){wrap.style.setProperty('--mobile-dynamic-height',height+'px');chart.resize();}
 }

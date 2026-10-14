@@ -437,7 +437,9 @@ def build_dynamic_line_html(payload: Dict[str, Any], debug_logs: Optional[List[s
       {{ line: '#4c97ff', areaTop: 'rgba(76, 151, 255, 0.18)', areaBottom: 'rgba(76, 151, 255, 0)' }},
       {{ line: '#9b6bff', areaTop: 'rgba(155, 107, 255, 0.18)', areaBottom: 'rgba(155, 107, 255, 0)' }},
       {{ line: '#f59e0b', areaTop: 'rgba(245, 158, 11, 0.18)', areaBottom: 'rgba(245, 158, 11, 0)' }},
-      {{ line: '#ec4899', areaTop: 'rgba(236, 72, 153, 0.18)', areaBottom: 'rgba(236, 72, 153, 0)' }}
+      {{ line: '#ec4899', areaTop: 'rgba(236, 72, 153, 0.18)', areaBottom: 'rgba(236, 72, 153, 0)' }},
+      {{ line: '#b4d93b', areaTop: 'rgba(180, 217, 59, 0.18)', areaBottom: 'rgba(180, 217, 59, 0)' }},
+      {{ line: '#ff6b4a', areaTop: 'rgba(255, 107, 74, 0.18)', areaBottom: 'rgba(255, 107, 74, 0)' }}
     ];
 
     const fullSeriesDataMap = {{}};

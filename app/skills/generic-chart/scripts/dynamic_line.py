@@ -699,8 +699,10 @@ def postprocess_dynamic_line(payload: dict[str, Any], output: Path) -> None:
     document = document.replace("        legend: {\n          data: seriesList,", "        legend: {\n          show: !compact,\n          selected: mobileLegendSelection,\n          data: seriesList,")
     document = document.replace("          text: title,", "          text: compact ? '' : title,")
     document = document.replace("gridTop: legendTop + legendRows * legendRowHeight + (compact ? 12 : 16)", "gridTop: compact ? document.querySelector('.mobileDynamicHeader').offsetHeight + 10 : legendTop + legendRows * legendRowHeight + 16")
-    document = document.replace("gridBottom: compact ? 76 : 92", "gridBottom: compact ? 52 : 92")
+    document = document.replace("gridBottom: compact ? 76 : 92", "gridBottom: compact ? getDynamicPlayerBottom() : 92")
     document = document.replace("</body>", (Path(__file__).resolve().parents[1] / "runtime/mobile_interactions.html").read_text(encoding="utf-8") + "</body>")
+    document = document.replace("          scale: true,\n          splitNumber: 4,", "          scale: true,\n          ...getDynamicFullRange(),\n          splitNumber: 4,")
+    document = document.replace("      timelineRange.value = safeIndex;", "      alignDynamicPlayer();\n      timelineRange.value = safeIndex;")
     output.write_text(document, encoding="utf-8")
 
 
