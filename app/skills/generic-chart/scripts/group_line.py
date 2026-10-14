@@ -773,6 +773,13 @@ svg{{display:block;width:100%;height:100%;overflow:visible}}
 .tooltip-value{{justify-self:end;text-align:right;margin-left:0;color:#fff;font-weight:650;font-variant-numeric:tabular-nums}}
 @media(min-width:1200px){{.chart-stage{{height:{max(220, int(config["height"]) - 82)}px}}}}
 @media(max-width:680px){{.group-line-component{{min-height:0;height:auto;padding:0}}.chart-title{{min-height:18px;max-height:42px;font-size:16px;line-height:1.25;padding:0}}.chart-subtitle{{font-size:12px}}.chart-tabs{{top:4px;right:0;gap:2px}}.chart-tab{{height:30px;min-width:44px;padding:0 8px;border-radius:8px;font-size:12px}}.chart-stage{{height:calc(clamp(242px,calc(100cqw / 2.72),306px) - 54px);min-height:188px;margin-top:4px}}.axis-label,.x-label{{font-size:10px;font-weight:400}}.chart-legend{{gap:8px 12px;min-height:0;margin-top:0;font-size:10px;align-content:center}}.legend-item{{gap:5px;max-width:42%;overflow:hidden;text-overflow:ellipsis}}.legend-dot{{width:8px;height:8px}}.chart-tooltip{{min-width:0;width:fit-content;max-width:calc(100vw - 24px);font-size:10px;padding:6px 8px;white-space:normal}}.tooltip-label{{min-width:0}}}}
+ .mobile-event-detail{{margin:10px 0 0;padding:12px;border:1px solid var(--chart-border-default);border-radius:10px;background:var(--chart-point-fill);color:var(--chart-text-primary);font-size:14px;line-height:1.5}}
+.mobile-event-detail[hidden]{{display:none}}
+.mobile-event-date{{color:var(--chart-text-secondary);font-size:12px;margin:0 0 4px}}
+.mobile-event-title{{margin:0;font-weight:600;overflow-wrap:anywhere}}
+.mobile-event-tabs{{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}}
+.mobile-event-tabs button{{border:1px solid var(--chart-border-default);border-radius:6px;background:transparent;color:var(--chart-text-secondary);padding:5px 8px;font:inherit;font-size:12px;touch-action:manipulation}}
+.mobile-event-tabs button[aria-pressed="true"]{{color:var(--chart-text-primary);border-color:var(--event-color);background:var(--chart-surface-muted)}}
 </style>
 </head>
 <body>
@@ -781,6 +788,7 @@ svg{{display:block;width:100%;height:100%;overflow:visible}}
   <p class="chart-subtitle"></p>
   <div class="chart-tabs" role="tablist"></div>
   <div class="chart-stage"><svg role="img" aria-label="{page_title}"></svg></div>
+  <section class="mobile-event-detail" hidden aria-label="事件说明"></section>
   <div class="chart-legend"></div>
   <div class="chart-tooltip"></div>
 </section>
@@ -1341,6 +1349,42 @@ function drawEventLabel(parent,x,y,overlay,color,dateText,titleText,bounds) {{
 function shouldShowLineLegend(series){{
   return visual.legend.visible!==false && (series.length>1 || config.visualStyle?.legend?.visible===true);
 }}
+let mobileEventKey='';
+function drawMobileEventDetails(events,svg) {{
+  const detail=root.querySelector('.mobile-event-detail');
+  detail.setAttribute('aria-label',formatterLocale()==='zh-CN'?'事件说明':'Event details');
+  detail.hidden=!events.length;
+  detail.replaceChildren();
+  if(!events.length)return;
+  const ordered=[...events].sort((a,b)=>a[1]-b[1]);
+  const keyOf=e=>`${{e[5]}}|${{e[6]}}`;
+  let active=Math.max(0,ordered.findIndex(e=>keyOf(e)===mobileEventKey));
+  if(!mobileEventKey||!ordered.some(e=>keyOf(e)===mobileEventKey))active=ordered.length-1;
+  const date=document.createElement('p');date.className='mobile-event-date';
+  const title=document.createElement('p');title.className='mobile-event-title';
+  const tabs=document.createElement('div');tabs.className='mobile-event-tabs';tabs.setAttribute('aria-label',formatterLocale()==='zh-CN'?'选择事件':'Select an event');
+  detail.append(date,title,tabs);
+  const rings=[],buttons=[];
+  const select=index=>{{
+    const event=ordered[index];mobileEventKey=keyOf(event);
+    date.textContent=`${{event[5]}} · ${{index+1}}/${{ordered.length}}`;
+    title.textContent=event[6];detail.style.setProperty('--event-color',event[4]);
+    rings.forEach((ring,i)=>ring.setAttribute('opacity',i===index?'1':'0'));
+    buttons.forEach((button,i)=>button.setAttribute('aria-pressed',String(i===index)));
+    postChartHeight();
+  }};
+  ordered.forEach((event,index)=>{{
+    const [,x,y,overlay,color,dateText,titleText]=event;
+    const ring=svgEl('circle',{{cx:x,cy:y,r:toNumber(overlay.radius,4.2)+3,fill:'none',stroke:color,'stroke-width':2,'pointer-events':'none',class:'mobile-event-ring'}});
+    const hit=svgEl('circle',{{cx:x,cy:y,r:14,fill:'transparent','pointer-events':'all',class:'mobile-event-hit',role:'button',tabindex:0,'aria-label':`${{dateText}} ${{titleText}}`}});
+    hit.addEventListener('pointerdown',event=>{{event.stopPropagation();hideTooltip();select(index);}});
+    hit.addEventListener('click',event=>{{event.stopPropagation();select(index);}});
+    hit.addEventListener('keydown',event=>{{if(event.key==='Enter'||event.key===' '){{event.preventDefault();select(index);}}}});
+    rings.push(ring);svg.append(ring,hit);
+    const button=document.createElement('button');button.type='button';button.textContent=dateText;button.onclick=()=>{{hideTooltip();select(index);}};buttons.push(button);tabs.append(button);
+  }});
+  select(active);
+}}
 function drawSvgLegend(series, width, height, topY = null) {{
   if (!shouldShowLineLegend(series)) {{
     legend.style.display = 'none';
@@ -1649,7 +1693,7 @@ function render() {{
   }});
   eventLabelLayout.connectorLayer = svgEl('g', {{class:'event-label-connectors','pointer-events':'none'}});
   svg.appendChild(eventLabelLayout.connectorLayer);
-  pendingEventLabels.forEach(args => drawEventLabel(...args));
+  if (!isMobile) pendingEventLabels.forEach(args => drawEventLabel(...args));
   rows.forEach((row, index) => {{
     const x = hoverStartX(index);
     const hitWidth = hoverWidthFor(index);
@@ -1659,6 +1703,8 @@ function render() {{
     hit.addEventListener('mouseleave', hideTooltip);
     svg.appendChild(hit);
   }});
+  if (isMobile) drawMobileEventDetails(pendingEventLabels, svg);
+  else {{ const detail=root.querySelector('.mobile-event-detail');detail.hidden=true;detail.replaceChildren(); }}
   drawSvgLegend(series, width, height, legendTopY);
 }}
 function tooltipBounds(anchorX, tooltipWidth, viewportLeft = 0, viewportRight = window.innerWidth, safeDistance = 0) {{
