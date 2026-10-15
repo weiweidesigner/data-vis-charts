@@ -96,10 +96,12 @@ svg:not(.markmap),canvas,#chart,#chart>div,.range-shell{touch-action:pan-y!impor
     tip.style.left=left+'px';tip.style.setProperty('--arrow-left',Math.max(14,Math.min(width-14,anchor-left))+'px');
     if(placement.outer){
       const {portal,host,left:originX,top:originY,width:w,height:h}=placement.outer;
+      // Pointer coordinates belong to the chart frame; the portal belongs to the host viewport.
+      const pointerY=originY+event.clientY-placement.top;
       let px=originX+anchor-w/2,py=originY+parseFloat(tip.style.top||'0');
       if(!active.matches('.hit-area')){
-        if(active.matches('.treemap-cell')){px=originX+anchor+14;py=event.clientY+14;}
-        else{const side=anchor<viewport/2?'right':'left';portal.dataset.side=side;px=side==='right'?originX+anchor+14:originX+anchor-w-14;py=event.clientY-h/2;}
+        if(active.matches('.treemap-cell')){px=originX+anchor+14;py=pointerY+14;}
+        else{const side=anchor<viewport/2?'right':'left';portal.dataset.side=side;px=side==='right'?originX+anchor+14:originX+anchor-w-14;py=pointerY-h/2;}
       }
       px=Math.max(8,Math.min(host.innerWidth-w-8,px));py=Math.max(8,Math.min(host.innerHeight-h-8,py));
       portal.style.left=px+'px';portal.style.top=py+'px';portal.style.setProperty('--local-tip-arrow-x',Math.max(14,Math.min(w-14,originX+anchor-px))+'px');
