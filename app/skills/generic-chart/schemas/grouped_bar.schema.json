@@ -61,6 +61,6 @@
     "Tooltip should sit near the first gridline but not too high; use a compact vertical gap around 10px.",
     "Do not add viewport or screen safety margins inside the component; component padding and default left/right plot margins should be zero unless needed for axis tick labels or explicit user styling.",
     "Right-axis tick labels should be measured and right-aligned close to the plot with a small plot-to-label gap.",
-    "Choose axis bounds from the actual finite data and the zero baseline, then place gridCount evenly spaced horizontal grid lines including both bounds (default five lines, four intervals). A tiny value across zero must not create a large empty band. Keep measured first/last category labels completely inside the SVG while sampling crowded labels."
+    "Choose axis bounds from the actual finite data and the zero baseline, then place gridCount horizontal lines including the zero baseline and both bounds (default five total lines); allocate intervals proportionally across positive and negative ranges and space ticks evenly on each side of zero. A tiny value across zero must not create a large empty band. Keep measured first/last category labels completely inside the SVG while sampling crowded labels."
   ]
 }

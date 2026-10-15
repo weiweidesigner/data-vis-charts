@@ -19,7 +19,8 @@ def test_grouped_bar_uses_five_grid_lines_without_empty_positive_band():
     for values, result in zip(inputs, results):
         assert len(result['ticks']) == 5
         assert result['min'] <= min(values) and result['max'] >= max(values)
-        for a, b in zip(result['ticks'], result['ticks'][1:]):
-            assert abs((a-b)-result['step']) < 1e-8
+        assert 0 in result['ticks']
+        assert len(set(result['ticks'])) == 5
+        assert all(a > b for a,b in zip(result['ticks'],result['ticks'][1:]))
     assert results[0]['max'] <= .5
     assert results[1]['max'] == 0

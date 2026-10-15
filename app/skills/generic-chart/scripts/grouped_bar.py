@@ -499,7 +499,13 @@ function range(values, gridCount) {{
   min = Math.floor(min / lowerUnit) * lowerUnit;
   max = Math.ceil(max / upperUnit) * upperUnit;
   const step = (max - min) / divisions;
-  const ticks = Array.from({{length:divisions + 1}}, (_, i) => Number((max - step * i).toFixed(10)));
+  let ticks = Array.from({{length:divisions + 1}}, (_, i) => Number((max - step * i).toFixed(10)));
+  if (min < 0 && max > 0 && divisions >= 2) {{
+    const positive = Math.min(divisions - 1, Math.max(1, Math.round(divisions * max / (max - min))));
+    const negative = divisions - positive;
+    ticks = [...Array.from({{length:positive + 1}}, (_, i) => Number((max * (positive - i) / positive).toFixed(10))),
+      ...Array.from({{length:negative}}, (_, i) => Number((min * (i + 1) / negative).toFixed(10)))];
+  }}
   return {{min, max, step, ticks}};
 }}
 function tooltipBounds(anchorX, preferredTop, tooltipWidth, tooltipHeight, viewport = {{}}, safeDistance = 0) {{
@@ -797,7 +803,7 @@ function render() {{
   const y = value => margin.top + plotH - (number(value) - yRange.min) / (yRange.max - yRange.min) * plotH;
   yRange.ticks.forEach((value, index) => {{
     const gy = y(value);
-    svg.appendChild(node('line', {{x1:margin.left,y1:gy,x2:margin.left+plotW,y2:gy,class:'grid-line'}}));
+    svg.appendChild(node('line', {{x1:margin.left,y1:gy,x2:margin.left+plotW,y2:gy,class:Math.abs(value)<1e-10?'axis-line':'grid-line'}}));
     if (showLeftAxis) {{
       svg.appendChild(node('text', {{x:margin.left-14,y:gy+4,class:'axis-label','text-anchor':'end'}}, tickLabels[index] ?? formatAxisValue(value)));
     }}
@@ -805,7 +811,6 @@ function render() {{
       svg.appendChild(node('text', {{x:rightAxisX,y:gy+4,class:'axis-label','text-anchor':'end'}}, tickLabels[index] ?? formatAxisValue(value)));
     }}
   }});
-  svg.appendChild(node('line', {{x1:margin.left,y1:y(0),x2:margin.left+plotW,y2:y(0),class:'axis-line'}}));
   if (axisLegend) {{
     const legendX = showRightAxis ? rightAxisX : Math.max(0, margin.left - 14);
     svg.appendChild(node('text', {{

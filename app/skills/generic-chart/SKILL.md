@@ -119,4 +119,4 @@ tooltip 的纵向锚点必须来自绘图区首根网格线，而不是标题、
 
 如果组件运行在跨域 iframe、`file://` opaque origin iframe，或任何浏览器禁止访问父页面 DOM 的环境中，iframe 内脚本无法把 DOM 绘制到 iframe 外部；此时仅靠组件脚本无法突破宿主裁剪，只能退回 iframe 内部 tooltip，或由宿主页面提供 postMessage portal bridge，或改用非 iframe/同源方式嵌入。
 
-分组柱状图的 `gridCount` 表示横向网格线数量，包含上下边界；默认 5 根线，形成 4 个等间距区间。零轴是独立的数据基线。
+分组柱状图的 `gridCount` 表示横线总数，0 轴计入其中且不重复绘制；默认共 5 根。跨零时按正负范围分配区间，零轴两侧分别等间距，避免微小正值占据大片空白。
