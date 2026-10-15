@@ -118,3 +118,5 @@ Only pass style arguments when the user asks for visual changes. Preserve the de
 tooltip 的纵向锚点必须来自绘图区首根网格线，而不是标题、段落或组件顶部。脚本只允许在左右方向做视口 clamp，避免横向出屏；不要因为与 `.chart-title` 或上方说明文字重叠，就把 tooltip 改定位到标题上方。若首根网格线上方空间不足，可由宿主 portal 做运行时翻转到首根网格线下方；不要通过静态预留间距或标题避让来改变图表布局。
 
 如果组件运行在跨域 iframe、`file://` opaque origin iframe，或任何浏览器禁止访问父页面 DOM 的环境中，iframe 内脚本无法把 DOM 绘制到 iframe 外部；此时仅靠组件脚本无法突破宿主裁剪，只能退回 iframe 内部 tooltip，或由宿主页面提供 postMessage portal bridge，或改用非 iframe/同源方式嵌入。
+
+分组柱状图的 `gridCount` 表示横向网格线数量，包含上下边界；默认 5 根线，形成 4 个等间距区间。零轴是独立的数据基线。

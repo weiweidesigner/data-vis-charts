@@ -6,7 +6,7 @@ import subprocess
 SCRIPT = Path(__file__).resolve().parents[1]/'app/skills/generic-chart/scripts/grouped_bar.py'
 
 
-def test_grouped_bar_uses_five_equal_intervals_without_empty_positive_band():
+def test_grouped_bar_uses_five_grid_lines_without_empty_positive_band():
     spec = importlib.util.spec_from_file_location('range_grouped_bar', SCRIPT)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -17,7 +17,7 @@ def test_grouped_bar_uses_five_equal_intervals_without_empty_positive_band():
     js += '\nconsole.log(JSON.stringify('+json.dumps(inputs)+'.map(v=>range(v,5))))'
     results = json.loads(subprocess.check_output(['node', '-e', js], text=True))
     for values, result in zip(inputs, results):
-        assert len(result['ticks']) == 6
+        assert len(result['ticks']) == 5
         assert result['min'] <= min(values) and result['max'] >= max(values)
         for a, b in zip(result['ticks'], result['ticks'][1:]):
             assert abs((a-b)-result['step']) < 1e-8

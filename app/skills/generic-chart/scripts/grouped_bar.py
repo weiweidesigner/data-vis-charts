@@ -488,7 +488,7 @@ const niceStep = (range, count = 4) => {{
 }};
 function range(values, gridCount) {{
   const finite = values.filter(Number.isFinite);
-  const divisions = Math.max(2, Math.round(gridCount || 5));
+  const divisions = Math.max(2, Math.round(gridCount || 5)) - 1;
   let min = Math.min(0, ...finite), max = Math.max(0, ...finite);
   if (min === max) {{ min = -1; max = 1; }}
   const span = max - min;
