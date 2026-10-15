@@ -498,14 +498,24 @@ function range(values, gridCount) {{
   const upperUnit = max > 0 && max < span * .1 ? coarse / 10 : coarse;
   min = Math.floor(min / lowerUnit) * lowerUnit;
   max = Math.ceil(max / upperUnit) * upperUnit;
-  const step = (max - min) / divisions;
-  let ticks = Array.from({{length:divisions + 1}}, (_, i) => Number((max - step * i).toFixed(10)));
-  if (min < 0 && max > 0 && divisions >= 2) {{
-    const positive = Math.min(divisions - 1, Math.max(1, Math.round(divisions * max / (max - min))));
-    const negative = divisions - positive;
-    ticks = [...Array.from({{length:positive + 1}}, (_, i) => Number((max * (positive - i) / positive).toFixed(10))),
-      ...Array.from({{length:negative}}, (_, i) => Number((min * (i + 1) / negative).toFixed(10)))];
+  const zeroGridScaleVersion = 3;
+  let tickMin = min, tickMax = max;
+  // Keep a tiny opposite-sign bar in the domain without adding a crowded grid line.
+  if (min < 0 && max > 0 && max < (max - min) * .1) tickMax = 0;
+  else if (min < 0 && max > 0 && -min < (max - min) * .1) tickMin = 0;
+  else if (min < 0 && max > 0 && divisions >= 2) {{
+    let best = null;
+    for (let negative = 1; negative < divisions; negative++) {{
+      const needed = Math.max(-min / negative, max / (divisions - negative));
+      const unit = 10 ** (Math.floor(Math.log10(needed)) - 1);
+      const candidate = Math.ceil(needed / unit) * unit;
+      if (!best || candidate < best.step) best = {{step:candidate,negative}};
+    }}
+    tickMin = min = -best.negative * best.step;
+    tickMax = max = (divisions - best.negative) * best.step;
   }}
+  const step = (tickMax - tickMin) / divisions;
+  const ticks = Array.from({{length:divisions + 1}}, (_, i) => Number((tickMax - step * i).toFixed(10)));
   return {{min, max, step, ticks}};
 }}
 function tooltipBounds(anchorX, preferredTop, tooltipWidth, tooltipHeight, viewport = {{}}, safeDistance = 0) {{
