@@ -399,7 +399,7 @@ svg{{display:block;width:100%;height:100%;overflow:visible}}
 </style>
 </head>
 <body>
-<section class="chart-component">
+<section class="chart-component" data-chart-layout-version="2">
   <h2 class="chart-title">{title}</h2>
   <div class="chart-stage"><svg role="img" aria-label="{title}"></svg></div>
   <div class="chart-legend"></div>
@@ -487,16 +487,19 @@ const niceStep = (range, count = 4) => {{
   return factor * power;
 }};
 function range(values, gridCount) {{
-  let min = Math.min(0, ...values);
-  let max = Math.max(0, ...values);
-  if (min === max) {{ min -= 1; max += 1; }}
-  const step = niceStep(max - min, Math.max(1, gridCount - 1));
-  min = Math.floor(min / step) * step;
-  max = Math.ceil(max / step) * step;
-  const ticks = [];
-  for (let value = max; value >= min - step / 2; value -= step) {{
-    ticks.push(Number(value.toFixed(10)));
-  }}
+  const finite = values.filter(Number.isFinite);
+  const divisions = Math.max(2, Math.round(gridCount || 5));
+  let min = Math.min(0, ...finite), max = Math.max(0, ...finite);
+  if (min === max) {{ min = -1; max = 1; }}
+  const span = max - min;
+  const coarse = niceStep(span, divisions);
+  // A tiny value across zero must not reserve an entire coarse positive band.
+  const lowerUnit = min < 0 && Math.abs(min) < span * .1 ? coarse / 10 : coarse;
+  const upperUnit = max > 0 && max < span * .1 ? coarse / 10 : coarse;
+  min = Math.floor(min / lowerUnit) * lowerUnit;
+  max = Math.ceil(max / upperUnit) * upperUnit;
+  const step = (max - min) / divisions;
+  const ticks = Array.from({{length:divisions + 1}}, (_, i) => Number((max - step * i).toFixed(10)));
   return {{min, max, step, ticks}};
 }}
 function tooltipBounds(anchorX, preferredTop, tooltipWidth, tooltipHeight, viewport = {{}}, safeDistance = 0) {{
@@ -741,7 +744,7 @@ function sampledXAxisIndexes(labels, slot, fontSize = 10, fontWeight = 400) {{
   if (count <= 0) return new Set();
   const gap = 8;
   const widths = labels.map(label => measureAxisWidth([label], fontSize, fontWeight) + gap);
-  const centers = labels.map((_, index) => slot * index + slot / 2);
+  const centers = labels.map((_, index) => Math.max(widths[index]/2, Math.min(slot*labels.length-widths[index]/2, slot*index+slot/2)));
   const overlaps = (leftIndex, rightIndex) => (
     centers[rightIndex] - widths[rightIndex] / 2 < centers[leftIndex] + widths[leftIndex] / 2 + gap
   );
@@ -819,7 +822,9 @@ function render() {{
   const xLabelIndexes = sampledXAxisIndexes(xLabels, slot, 10, 400);
   config.data.forEach((row, index) => {{
     if (xLabelIndexes.has(index)) {{
-      svg.appendChild(node('text', {{x:xCenter(index),y:margin.top+plotH+20,class:'x-label'}}, row[config.xField]));
+      const half = measureAxisWidth([row[config.xField]], 10, 400) / 2;
+      const labelX = Math.max(margin.left + half + 1, Math.min(margin.left + plotW - half - 1, xCenter(index)));
+      svg.appendChild(node('text', {{x:labelX,y:margin.top+plotH+20,class:'x-label'}}, row[config.xField]));
     }}
   }});
   if (chartKind === 'line') {{

@@ -2,13 +2,52 @@
   "chartType": "grouped-bar",
   "script": "grouped_bar.py",
   "purpose": "Compare multiple numeric series across categories.",
-  "rawDataContract": {"shape": "array<object>", "notes": "Rows may be wide or tidy. The model chooses category and grouped numeric fields."},
+  "rawDataContract": {
+    "shape": "array<object>",
+    "notes": "Rows may be wide or tidy. The model chooses category and grouped numeric fields."
+  },
   "semanticChannels": [
-    {"channel": "x", "payloadField": "xField", "required": true, "acceptedTypes": ["string", "date", "number"], "semantics": "category or period"},
-    {"channel": "bar.y[]", "payloadField": "series[].field", "required": true, "acceptedTypes": ["number"], "semantics": "multiple comparable measures or groups"},
-    {"channel": "series.label", "payloadField": "series[].label", "required": false, "acceptedTypes": ["string"], "semantics": "legend labels"}
+    {
+      "channel": "x",
+      "payloadField": "xField",
+      "required": true,
+      "acceptedTypes": [
+        "string",
+        "date",
+        "number"
+      ],
+      "semantics": "category or period"
+    },
+    {
+      "channel": "bar.y[]",
+      "payloadField": "series[].field",
+      "required": true,
+      "acceptedTypes": [
+        "number"
+      ],
+      "semantics": "multiple comparable measures or groups"
+    },
+    {
+      "channel": "series.label",
+      "payloadField": "series[].label",
+      "required": false,
+      "acceptedTypes": [
+        "string"
+      ],
+      "semantics": "legend labels"
+    }
   ],
-  "payloadShape": {"title": "string", "xField": "string", "data": "array<object>", "series": [{"field": "string", "label": "string"}]},
+  "payloadShape": {
+    "title": "string",
+    "xField": "string",
+    "data": "array<object>",
+    "series": [
+      {
+        "field": "string",
+        "label": "string"
+      }
+    ]
+  },
   "modelInstructions": [
     "Use when grouped comparison matters more than time trend.",
     "Keep grouped series count small enough for readable bars.",
@@ -21,6 +60,7 @@
     "For right-side y-axes, align the y-axis description to the same right edge as the y-axis tick labels, and allow the description text to extend leftward into the chart area instead of reserving extra right margin.",
     "Tooltip should sit near the first gridline but not too high; use a compact vertical gap around 10px.",
     "Do not add viewport or screen safety margins inside the component; component padding and default left/right plot margins should be zero unless needed for axis tick labels or explicit user styling.",
-    "Right-axis tick labels should be measured and right-aligned close to the plot with a small plot-to-label gap."
+    "Right-axis tick labels should be measured and right-aligned close to the plot with a small plot-to-label gap.",
+    "Choose axis bounds from the actual finite data and the zero baseline, then split that range into gridCount equal intervals (default five intervals, six ticks). A tiny value across zero must not create a large empty band. Keep measured first/last category labels completely inside the SVG while sampling crowded labels."
   ]
 }
