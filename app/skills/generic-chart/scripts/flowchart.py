@@ -801,8 +801,8 @@ body.is-fullscreen.is-forced-landscape #wrap{{
   white-space:pre-wrap;
 }}
 @media (max-width:720px){{
-  #title{{left:12px;right:52px;top:10px;font-size:16px}}
-  #fullscreenBtn{{display:inline-flex;right:12px;top:10px}}
+  #title{{left:0;right:0;top:10px;font-size:16px}}
+  #fullscreenBtn{{display:none!important;right:12px;top:10px}}
   #diagram{{padding:54px 18px 24px}}
   #source{{padding:54px 18px 24px}}
 }}

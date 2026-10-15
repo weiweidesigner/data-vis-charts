@@ -337,7 +337,7 @@ body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Mic
 .legend-item{{display:flex;align-items:center;gap:7px;min-width:0}}
 .legend-label{{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 .treemap-component.hide-legend .treemap-legend{{display:none}}
-@media(max-width:640px){{.treemap-component{{min-height:0;padding:12px 14px 10px}}.treemap-title{{min-height:18px;font-size:14px;line-height:1.2}}.treemap-subtitle{{margin:2px 0 6px;font-size:12px;line-height:1.3}}.treemap-stage{{height:auto;min-height:0;aspect-ratio:900/700}}.treemap-cell{{padding:9px;border-radius:0}}.treemap-legend{{gap:8px 12px;margin-top:8px;font-size:12px}}.treemap-label,.treemap-tooltip{{font-size:12px}}}}
+@media(max-width:640px){{.treemap-component{{min-height:0;padding:0 0 10px}}.treemap-title{{min-height:18px;font-size:14px;line-height:1.2}}.treemap-subtitle{{margin:2px 0 6px;font-size:12px;line-height:1.3}}.treemap-stage{{height:auto;min-height:0;aspect-ratio:900/700}}.treemap-cell{{padding:9px;border-radius:0}}.treemap-legend{{gap:8px 12px;margin-top:8px;font-size:12px}}.treemap-label,.treemap-tooltip{{font-size:12px}}}}
 </style>
 </head>
 <body>

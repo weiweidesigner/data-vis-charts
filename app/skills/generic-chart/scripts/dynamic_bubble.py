@@ -176,7 +176,7 @@ def build_html(payload: dict[str, Any]) -> str:
 html,body{{margin:0;width:100%;height:auto;min-height:0;background:transparent;color:#151922;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}}
 #wrap{{position:relative;width:100%;height:clamp(400px,32vw,520px);min-height:400px;max-height:520px;background:transparent;border:0;overflow:hidden;--grid-left:0px;--grid-right:1px}}
 #header{{position:absolute;left:0!important;right:12px;top:14px;z-index:6;margin:0!important;padding:0!important;transform:none!important}}
-#title{{position:relative!important;left:0!important;right:auto!important;top:auto!important;margin:0!important;padding:0!important;transform:none!important;font-family:"PingFang SC","Microsoft YaHei",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:22px;line-height:1.35;font-weight:700;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#151922}}
+#title{{position:relative!important;left:0!important;right:auto!important;top:auto!important;margin:0!important;padding:0!important;transform:none!important;font-family:"PingFang SC","Microsoft YaHei",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:22px;line-height:1.35;font-weight:700;letter-spacing:-.2px;white-space:normal;overflow-wrap:anywhere;color:#151922}}
 #legend{{display:flex;align-items:center;flex-wrap:wrap;gap:8px 20px;margin:12px 0 0!important;padding:0!important;min-height:18px}}
 .legendItem{{display:inline-flex;align-items:center;gap:7px;margin:0;padding:0;color:#687386;font-size:12px;line-height:18px;white-space:nowrap}}
 .legendDot{{width:9px;height:9px;flex:0 0 9px;border-radius:50%}}
@@ -205,6 +205,7 @@ html,body{{margin:0;width:100%;height:auto;min-height:0;background:transparent;c
  html,body{{height:auto;min-height:0}}
  #wrap{{height:clamp(300px,78vw,360px);min-height:300px;max-height:360px;--grid-left:0px;--grid-right:1px}}
  #header{{right:8px;top:10px}}
+ #wrap{{max-height:none}}
  #title{{font-size:17px;font-weight:700;letter-spacing:0}}
  #legend{{gap:6px 12px;margin-top:8px!important}}
  .legendItem{{font-size:11px;gap:6px}}
@@ -244,7 +245,7 @@ function layout(){{
  return {{
   gridLeft:0,
   gridRight:1,
-  top:small?104:128,
+  top:Math.max(small?104:128, document.getElementById("header").offsetTop+document.getElementById("header").offsetHeight+34),
   bottom:small?76:84
  }};
 }}
@@ -359,6 +360,7 @@ function renderChart(){{
  const xScale=axisScale(frameRows.map(r=>num(r[enc.x])));
  const yScale=axisScale(frameRows.map(r=>num(r[enc.y])));
  const l=layout();
+ if(compact()){{document.getElementById("wrap").style.height=Math.max(320,l.top+l.bottom+160)+"px";chart.resize();}}
  applyLayoutToDom();
  setTimelineState();
   chart.setOption({{
@@ -368,7 +370,7 @@ function renderChart(){{
   animationEasingUpdate:"cubicInOut",
   grid:{{left:l.gridLeft,right:l.gridRight,top:l.top,bottom:l.bottom,containLabel:true}},
   legend:{{show:false}},
-  tooltip:{{className:"generic-canvas-tooltip",trigger:"item",backgroundColor:"rgba(255,255,255,.98)",borderColor:"#dfe5ee",extraCssText:"box-shadow:0 12px 28px rgba(17,24,39,.12);",textStyle:{{color:"#151922"}},formatter:p=>`<b>${{p.value[3]}}</b><br/>${{labels.time||enc.time||"time"}}: ${{frame}}<br/>${{labels.x||enc.x}}: ${{compactNumber(p.value[0])}}<br/>${{labels.y||enc.y}}: ${{compactNumber(p.value[1])}}<br/>${{labels.size||enc.size}}: ${{compactNumber(p.value[2])}}<br/>${{p.value[4]||""}}`}},
+  tooltip:{{className:"generic-canvas-tooltip",trigger:"item",confine:true,triggerOn:matchMedia("(pointer:coarse)").matches?"none":"mousemove|click",backgroundColor:"rgba(255,255,255,.98)",borderColor:"#dfe5ee",extraCssText:"box-shadow:0 12px 28px rgba(17,24,39,.12);max-width:calc(100vw - 16px);white-space:normal;overflow-wrap:anywhere;",textStyle:{{color:"#151922"}},formatter:p=>`<b>${{p.value[3]}}</b><br/>${{labels.time||enc.time||"time"}}: ${{frame}}<br/>${{labels.x||enc.x}}: ${{compactNumber(p.value[0])}}<br/>${{labels.y||enc.y}}: ${{compactNumber(p.value[1])}}<br/>${{labels.size||enc.size}}: ${{compactNumber(p.value[2])}}<br/>${{p.value[4]||""}}`}},
   xAxis:{{type:"value",min:xScale.min,max:xScale.max,interval:xScale.interval,splitNumber:4,name:"",axisLabel:{{color:"#687386",formatter:v=>compactNumber(v),margin:10,hideOverlap:true,showMinLabel:false,showMaxLabel:false}},axisLine:{{lineStyle:{{color:"#d9e0ea"}}}},axisTick:{{show:false}},splitLine:{{lineStyle:{{color:"rgba(104,115,134,.12)"}}}}}},
   yAxis:{{type:"value",min:yScale.min,max:yScale.max,interval:yScale.interval,splitNumber:4,name:"",axisLabel:{{color:"#687386",formatter:v=>compactNumber(v),inside:false,align:"right",padding:0,margin:3,hideOverlap:true}},axisLine:{{show:true,lineStyle:{{color:"#d9e0ea"}}}},axisTick:{{show:false}},splitLine:{{lineStyle:{{color:"rgba(104,115,134,.12)"}}}}}},
   graphic:[

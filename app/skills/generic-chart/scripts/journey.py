@@ -543,8 +543,8 @@ body.is-fullscreen.is-forced-landscape #wrap{{
   transform-origin:center center;
 }}
 @media (max-width:720px){{
-  #title{{left:12px;right:52px;top:10px;font-size:16px}}
-  #fullscreenBtn{{display:inline-flex}}
+  #title{{left:0;right:0;top:10px;font-size:16px}}
+  #fullscreenBtn{{display:none!important}}
   #wrap,#viewport,#diagram{{min-height:460px}}
   #diagram{{padding:54px 16px 22px}}
   #source{{padding:54px 18px 24px}}
@@ -786,6 +786,12 @@ mermaid.initialize(config);
     svg = diagram.querySelector("svg");
     if (!svg) throw new Error("Mermaid did not return an SVG element.");
 
+    const contentBounds = svg.getBBox();
+    const originalBox = svg.viewBox.baseVal;
+    if (contentBounds.height > 0 && originalBox.y < contentBounds.y - 4) {{
+      const bottom = Math.max(originalBox.y + originalBox.height, contentBounds.y + contentBounds.height + 4);
+      svg.setAttribute("viewBox", `${{originalBox.x}} ${{contentBounds.y-4}} ${{originalBox.width}} ${{bottom-contentBounds.y+4}}`);
+    }}
     const viewBox = svg.viewBox && svg.viewBox.baseVal;
     naturalWidth = viewBox && viewBox.width ? viewBox.width : svg.getBoundingClientRect().width;
     naturalHeight = viewBox && viewBox.height ? viewBox.height : svg.getBoundingClientRect().height;

@@ -8,8 +8,9 @@ svg:not(.markmap),canvas,#chart,#chart>div,.range-shell{touch-action:pan-y!impor
   const hits = '.hover-zone,.hit-area,.pie-slice,.ring-arc,.treemap-cell';
   let gesture = null, active = null, dismissTimer = null, nativeHovered = false, touchOrigin = null, placement = null, canvasState = null;
   const emit = (node,type,event) => node?.dispatchEvent(new MouseEvent(type,{clientX:event.clientX,clientY:event.clientY,bubbles:false}));
-  let localPortal=null,localSource=null;
+  let localPortal=null,localSource=null,localObserver=null;
   const hideLocalPortal=()=>{
+    localObserver?.disconnect();localObserver=null;
     if(localPortal)localPortal.hidden=true;
     if(localSource){localSource.style.removeProperty('visibility');localSource=null;}
   };
@@ -44,7 +45,11 @@ svg:not(.markmap),canvas,#chart,#chart>div,.range-shell{touch-action:pan-y!impor
     for(const property of ['color','padding','font-size','font-family','line-height','border-radius','border','box-shadow'])localPortal.style.setProperty(property,style.getPropertyValue(property));
     localPortal.style.width=Math.min(tip.offsetWidth,ctx.win.innerWidth-16)+'px';localPortal.hidden=false;
     localPortal.dataset.arrow=tip.matches('.waterfall-tooltip')?'bottom':tip.matches('.pie-tooltip')?'side':'none';
-    localSource=tip;tip.style.setProperty('visibility','hidden','important');
+    localObserver?.disconnect();
+    if(localSource&&localSource!==tip)localSource.style.removeProperty('visibility');
+    localSource=tip;
+    const conceal=()=>{if(tip.style.visibility!=='hidden'||tip.style.getPropertyPriority('visibility')!=='important')tip.style.setProperty('visibility','hidden','important');};
+    conceal();localObserver=new MutationObserver(conceal);localObserver.observe(tip,{attributes:true,attributeFilter:['style']});
     return {portal:localPortal,host:ctx.win,left:ctx.left+rect.left,top:ctx.top+rect.top,width:localPortal.offsetWidth,height:localPortal.offsetHeight};
   };
 
