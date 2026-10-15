@@ -138,7 +138,9 @@ def _normalize_component(component: dict[str, Any]) -> dict[str, Any]:
     items = props.get("items") or component.get("items") or component.get("data") or []
     if not isinstance(items, list) or not items:
         raise ValueError("pie items must be a non-empty array")
-    palette = ["#ffad3d", "#5a9bf0", "#4bc3d5", "#f9730c", "#8b5cf6"]
+    palette = ["#4d63f6", "#00b899", "#ff2f57", "#d97706", "#8e4ec6", "#0090ff", "#ab4aba", "#46a758"]
+    reserved_colors = {str(item.get("color")).lower() for item in items if isinstance(item, dict) and item.get("color")}
+    available_colors = [color for color in palette if color.lower() not in reserved_colors] or palette
     normalized_items = []
     for index, item in enumerate(items):
         if not isinstance(item, dict):
@@ -149,7 +151,7 @@ def _normalize_component(component: dict[str, Any]) -> dict[str, Any]:
                 "label": str(item.get("label") or item.get("name") or index + 1),
                 "value": max(0, value),
                 "displayValue": str(item.get("displayValue") or ""),
-                "color": str(item.get("color") or palette[index % len(palette)]),
+                "color": str(item.get("color") or f"var(--sv-chart-series-{palette.index(available_colors[index % len(available_colors)])+1},{available_colors[index % len(available_colors)]})"),
             }
         )
     total = sum(item["value"] for item in normalized_items)
@@ -177,6 +179,9 @@ def render_document(payload: dict[str, Any]) -> str:
     config_json = json.dumps(config, ensure_ascii=False).replace("</", "<\\/")
     contract = html.escape(json.dumps(component_schema(), ensure_ascii=False), quote=True)
     preferred_height = max(360, min(int(config["height"]), 480))
+    light = ['#4d63f6','#00b899','#ff2f57','#d97706','#8e4ec6','#0090ff','#ab4aba','#46a758']
+    dark = ['#8294ff','#34d3ad','#ff7188','#f6ad55','#d19dff','#70b8ff','#e796f3','#7ce2bd']
+    series_css = ':root{' + ''.join(f'--sv-chart-series-{i+1}:{color};' for i,color in enumerate(light)) + '}:root[data-theme="dark"]{' + ''.join(f'--sv-chart-series-{i+1}:{color};' for i,color in enumerate(dark)) + '}'
     return _finalize_document_theme(f"""<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -184,6 +189,7 @@ def render_document(payload: dict[str, Any]) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>pie</title>
 <style>
+{series_css}
 :root{{color-scheme:light;--business-text-151922:#151922;--business-text-687386:#687386;--business-text-fff:#fff;--business-text-4b5563:#4b5563;}}
 :root[data-theme="dark"]{{color-scheme:dark;--business-text-151922:#f1f5f9;--business-text-687386:#c1cad7;--business-text-fff:#f1f5f9;--business-text-4b5563:#c1cad7;}}
 
