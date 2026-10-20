@@ -173,21 +173,23 @@ def build_html(payload: dict[str, Any]) -> str:
 <script>window.echarts||document.write('<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"><\\/script>')</script>
 <style>
 *{{box-sizing:border-box}}
-html,body{{margin:0;width:100%;height:auto;min-height:0;background:transparent;color:#151922;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}}
+:root{{--bubble-text:#151922;--bubble-muted:#687386}}
+:root[data-theme="dark"]{{--bubble-text:#f1f5f9;--bubble-muted:#c1cad7}}
+html,body{{margin:0;width:100%;height:auto;min-height:0;background:transparent;color:var(--bubble-text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}}
 #wrap{{position:relative;width:100%;height:clamp(400px,32vw,520px);min-height:400px;max-height:520px;background:transparent;border:0;overflow:hidden;--grid-left:0px;--grid-right:1px}}
 #header{{position:absolute;left:0!important;right:12px;top:14px;z-index:6;margin:0!important;padding:0!important;transform:none!important}}
-#title{{position:relative!important;left:0!important;right:auto!important;top:auto!important;margin:0!important;padding:0!important;transform:none!important;font-family:"PingFang SC","Microsoft YaHei",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:22px;line-height:1.35;font-weight:700;letter-spacing:-.2px;white-space:normal;overflow-wrap:anywhere;color:#151922}}
+#title{{position:relative!important;left:0!important;right:auto!important;top:auto!important;margin:0!important;padding:0!important;transform:none!important;font-family:"PingFang SC","Microsoft YaHei",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:22px;line-height:1.35;font-weight:700;letter-spacing:-.2px;white-space:normal;overflow-wrap:anywhere;color:var(--bubble-text)}}
 #legend{{display:flex;align-items:center;flex-wrap:wrap;gap:8px 20px;margin:12px 0 0!important;padding:0!important;min-height:18px}}
-.legendItem{{display:inline-flex;align-items:center;gap:7px;margin:0;padding:0;color:#687386;font-size:12px;line-height:18px;white-space:nowrap}}
+.legendItem{{display:inline-flex;align-items:center;gap:7px;margin:0;padding:0;color:var(--bubble-muted);font-size:12px;line-height:18px;white-space:nowrap}}
 .legendDot{{width:9px;height:9px;flex:0 0 9px;border-radius:50%}}
 #chart{{position:absolute;inset:0;height:100%;min-height:100%}}
-#empty{{display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#687386;font-size:14px;z-index:4}}
+#empty{{display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:var(--bubble-muted);font-size:14px;z-index:4}}
 #timelineBar{{position:absolute;left:0;right:0;bottom:14px;z-index:5;display:flex;align-items:center;gap:8px;padding:6px 0 6px 8px;border-radius:999px;background:transparent;border:1px solid transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}}
 #timelineBar.is-hidden{{display:none}}
 #playBtn{{width:28px;height:28px;position:relative;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;padding:0;border:0;border-radius:999px;background:#4c91ff;color:#fff;cursor:pointer;box-shadow:none}}
 #playBtn::before{{content:"";width:0;height:0;border-top:4px solid transparent;border-bottom:4px solid transparent;border-left:6px solid #fff;transform:translateX(1px)}}
 #playBtn.is-playing::before{{width:8px;height:10px;border:0;border-radius:1px;background:linear-gradient(90deg,#fff 0 36%,transparent 36% 64%,#fff 64% 100%);transform:none}}
-.timeLabel{{min-width:58px;color:#687386;font-size:12px;line-height:1;text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}}
+.timeLabel{{min-width:58px;color:var(--bubble-muted);font-size:12px;line-height:1;text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}}
 #endLabel{{position:absolute;right:0;top:50%;min-width:auto;transform:translateY(-50%);text-align:right;pointer-events:none}}
 #sliderWrap{{position:relative;display:flex;align-items:center;flex:1;min-width:80px;height:28px;padding:0;--end-label-space:0px}}
 #sliderTrack{{position:absolute;left:0;right:var(--end-label-space);top:50%;height:4px;border-radius:999px;background:rgba(76,145,255,.16);transform:translateY(-50%);pointer-events:none;overflow:hidden}}
@@ -197,7 +199,7 @@ html,body{{margin:0;width:100%;height:auto;min-height:0;background:transparent;c
 #timelineRange::-webkit-slider-runnable-track{{height:4px;background:transparent}}
 #timelineRange::-moz-range-thumb{{width:14px;height:14px;border-radius:999px;background:#4c91ff;border:0;box-shadow:0 0 0 5px rgba(76,145,255,.14)}}
 #timelineRange::-moz-range-track{{height:4px;background:transparent}}
-#speedBtn{{height:28px;min-height:28px;line-height:28px;min-width:42px;padding:0 10px;border-radius:999px;border:1px solid transparent;background:rgba(148,163,184,.10);color:#151922;font-size:12px;font-weight:750;cursor:pointer}}
+#speedBtn{{height:28px;min-height:28px;line-height:28px;min-width:42px;padding:0 10px;border-radius:999px;border:1px solid transparent;background:rgba(148,163,184,.10);color:var(--bubble-text);font-size:12px;font-weight:750;cursor:pointer}}
 @media(min-width:721px) and (max-width:1100px){{
  #wrap{{height:clamp(380px,40vw,460px);min-height:380px;max-height:460px}}
 }}
@@ -216,6 +218,12 @@ html,body{{margin:0;width:100%;height:auto;min-height:0;background:transparent;c
 </style></head><body><div id="wrap" data-renderer-version="dynamic-bubble-v15"><div id="header"><div id="title">{safe_title}</div><div id="legend"></div></div><div id="chart"></div><div id="empty">暂无可渲染数据</div><div id="timelineBar" class="is-hidden"><button id="playBtn" type="button" aria-label="播放"></button><button id="speedBtn" type="button">1x</button><div id="startLabel" class="timeLabel"></div><div id="sliderWrap"><div id="sliderTrack"><span id="sliderFill"></span></div><input id="timelineRange" type="range" min="0" max="0" value="0" aria-label="时间轴" /></div><div id="endLabel" class="timeLabel"></div></div></div>
 <script>
 const payload={data_json};
+const darkMode=document.documentElement.dataset.theme==="dark";
+const chartText=darkMode?"#c1cad7":"#687386";
+const chartBorder=darkMode?"#526176":"#d9e0ea";
+const chartGrid=darkMode?"#2b3544":"rgba(104,115,134,.12)";
+const bubbleLabel=darkMode?"#e2e8f0":"#151922";
+const bubbleLabelBorder=darkMode?"rgba(15,23,42,.88)":"rgba(255,255,255,.94)";
 const rows=payload.rows||[], enc=payload.encode||{{}}, labels=payload.labels||{{}};
 const palette=["#38bdf8","#34d399","#f97316","#a78bfa","#f43f5e","#facc15","#fb7185","#2dd4bf"];
 const empty=document.getElementById("empty");
@@ -313,9 +321,9 @@ function buildSeries(frame){{
    animationEasing:"cubicOut",
    animationEasingUpdate:"cubicInOut",
    symbolSize:v=>Math.max(compact()?8:10,Math.sqrt((v[2]||0)/maxSize)*(compact()?50:72)),
-   label:{{show:true,formatter:p=>p.value[3],position:"inside",color:"#151922",fontSize:compact()?9:10,fontWeight:700,textBorderColor:"rgba(255,255,255,.94)",textBorderWidth:2,overflow:"truncate",width:compact()?56:78}},
+   label:{{show:true,formatter:p=>p.value[3],position:"inside",color:bubbleLabel,fontSize:compact()?9:10,fontWeight:700,textBorderColor:bubbleLabelBorder,textBorderWidth:2,overflow:"truncate",width:compact()?56:78}},
    labelLayout:{{hideOverlap:true,moveOverlap:"shiftY"}},
-   emphasis:{{focus:"series",scale:true,label:{{show:true,formatter:p=>p.value[3],position:"top",color:"#151922",fontWeight:750,textBorderColor:"#fff",textBorderWidth:2}}}},
+   emphasis:{{focus:"series",scale:true,label:{{show:true,formatter:p=>p.value[3],position:"top",color:bubbleLabel,fontWeight:750,textBorderColor:bubbleLabelBorder,textBorderWidth:2}}}},
    data:frameRows.map((r,index)=>{{
     const name=String(r[enc.name]??"");
     const size=num(r[enc.size])||0;
@@ -338,10 +346,10 @@ function buildSeries(frame){{
   animationEasing:"cubicOut",
   animationEasingUpdate:"cubicInOut",
   symbolSize:v=>Math.max(compact()?8:10,Math.sqrt((v[2]||0)/maxSize)*(compact()?50:72)),
-  label:{{show:true,formatter:p=>p.value[3],position:"inside",color:"#151922",fontSize:compact()?9:10,fontWeight:700,textBorderColor:"rgba(255,255,255,.94)",textBorderWidth:2,overflow:"truncate",width:compact()?56:78}},
+  label:{{show:true,formatter:p=>p.value[3],position:"inside",color:bubbleLabel,fontSize:compact()?9:10,fontWeight:700,textBorderColor:bubbleLabelBorder,textBorderWidth:2,overflow:"truncate",width:compact()?56:78}},
   labelLayout:{{hideOverlap:true,moveOverlap:"shiftY"}},
   itemStyle:{{color:palette[index%palette.length],opacity:.76,borderColor:"rgba(255,255,255,.96)",borderWidth:1.5}},
-  emphasis:{{focus:"series",scale:true,label:{{show:true,formatter:p=>p.value[3],position:"top",color:"#151922",fontWeight:750,textBorderColor:"#fff",textBorderWidth:2}}}},
+  emphasis:{{focus:"series",scale:true,label:{{show:true,formatter:p=>p.value[3],position:"top",color:bubbleLabel,fontWeight:750,textBorderColor:bubbleLabelBorder,textBorderWidth:2}}}},
   data:frameRows.filter(r=>String(r[enc.series]??"Series")===g).map(r=>{{
    const name=String(r[enc.name]??"");
    const size=num(r[enc.size])||0;
@@ -370,13 +378,13 @@ function renderChart(){{
   animationEasingUpdate:"cubicInOut",
   grid:{{left:l.gridLeft,right:l.gridRight,top:l.top,bottom:l.bottom,containLabel:true}},
   legend:{{show:false}},
-  tooltip:{{className:"generic-canvas-tooltip",trigger:"item",confine:true,triggerOn:matchMedia("(pointer:coarse)").matches?"none":"mousemove|click",backgroundColor:"rgba(255,255,255,.98)",borderColor:"#dfe5ee",extraCssText:"box-shadow:0 12px 28px rgba(17,24,39,.12);max-width:calc(100vw - 16px);white-space:normal;overflow-wrap:anywhere;",textStyle:{{color:"#151922"}},formatter:p=>`<b>${{p.value[3]}}</b><br/>${{labels.time||enc.time||"time"}}: ${{frame}}<br/>${{labels.x||enc.x}}: ${{compactNumber(p.value[0])}}<br/>${{labels.y||enc.y}}: ${{compactNumber(p.value[1])}}<br/>${{labels.size||enc.size}}: ${{compactNumber(p.value[2])}}<br/>${{p.value[4]||""}}`}},
-  xAxis:{{type:"value",min:xScale.min,max:xScale.max,interval:xScale.interval,splitNumber:4,name:"",axisLabel:{{color:"#687386",formatter:v=>compactNumber(v),margin:10,hideOverlap:true,showMinLabel:false,showMaxLabel:false}},axisLine:{{lineStyle:{{color:"#d9e0ea"}}}},axisTick:{{show:false}},splitLine:{{lineStyle:{{color:"rgba(104,115,134,.12)"}}}}}},
-  yAxis:{{type:"value",min:yScale.min,max:yScale.max,interval:yScale.interval,splitNumber:4,name:"",axisLabel:{{color:"#687386",formatter:v=>compactNumber(v),inside:false,align:"right",padding:0,margin:3,hideOverlap:true}},axisLine:{{show:true,lineStyle:{{color:"#d9e0ea"}}}},axisTick:{{show:false}},splitLine:{{lineStyle:{{color:"rgba(104,115,134,.12)"}}}}}},
+  tooltip:{{className:"generic-canvas-tooltip",trigger:"item",confine:true,triggerOn:matchMedia("(pointer:coarse)").matches?"none":"mousemove|click",backgroundColor:darkMode?"rgba(24,31,42,.98)":"rgba(255,255,255,.98)",borderColor:chartBorder,extraCssText:`box-shadow:0 12px 28px ${{darkMode?"rgba(0,0,0,.42)":"rgba(17,24,39,.12)"}};max-width:calc(100vw - 16px);white-space:normal;overflow-wrap:anywhere;`,textStyle:{{color:darkMode?"#f1f5f9":"#151922"}},formatter:p=>`<b>${{p.value[3]}}</b><br/>${{labels.time||enc.time||"time"}}: ${{frame}}<br/>${{labels.x||enc.x}}: ${{compactNumber(p.value[0])}}<br/>${{labels.y||enc.y}}: ${{compactNumber(p.value[1])}}<br/>${{labels.size||enc.size}}: ${{compactNumber(p.value[2])}}<br/>${{p.value[4]||""}}`}},
+  xAxis:{{type:"value",min:xScale.min,max:xScale.max,interval:xScale.interval,splitNumber:4,name:"",axisLabel:{{color:chartText,formatter:v=>compactNumber(v),margin:10,hideOverlap:true,showMinLabel:false,showMaxLabel:false}},axisLine:{{lineStyle:{{color:chartBorder}}}},axisTick:{{show:false}},splitLine:{{lineStyle:{{color:chartGrid}}}}}},
+  yAxis:{{type:"value",min:yScale.min,max:yScale.max,interval:yScale.interval,splitNumber:4,name:"",axisLabel:{{color:chartText,formatter:v=>compactNumber(v),inside:false,align:"right",padding:0,margin:3,hideOverlap:true}},axisLine:{{show:true,lineStyle:{{color:chartBorder}}}},axisTick:{{show:false}},splitLine:{{lineStyle:{{color:chartGrid}}}}}},
   graphic:[
-   {{type:"text",left:"center",top:"45%",silent:true,z:1,style:{{text:frame,fill:"rgba(104,115,134,.13)",fontSize:compact()?42:64,fontWeight:800,textAlign:"center",textVerticalAlign:"middle"}}}},
-   {{type:"text",x:0,y:l.top-24,silent:true,z:4,style:{{text:labels.y||enc.y,fill:"#687386",fontSize:compact()?12:13,fontWeight:650,textAlign:"left",textVerticalAlign:"middle"}}}},
-   {{type:"text",x:chart.getWidth()-8,y:chart.getHeight()-l.bottom+(compact()?16:18),silent:true,z:4,style:{{text:labels.x||enc.x,fill:"#687386",fontSize:compact()?12:13,fontWeight:650,textAlign:"right",textVerticalAlign:"middle"}}}}
+   {{type:"text",left:"center",top:"45%",silent:true,z:1,style:{{text:frame,fill:darkMode?"rgba(193,202,215,.16)":"rgba(104,115,134,.13)",fontSize:compact()?42:64,fontWeight:800,textAlign:"center",textVerticalAlign:"middle"}}}},
+   {{type:"text",x:0,y:l.top-24,silent:true,z:4,style:{{text:labels.y||enc.y,fill:chartText,fontSize:compact()?12:13,fontWeight:650,textAlign:"left",textVerticalAlign:"middle"}}}},
+   {{type:"text",x:chart.getWidth()-8,y:chart.getHeight()-l.bottom+(compact()?16:18),silent:true,z:4,style:{{text:labels.x||enc.x,fill:chartText,fontSize:compact()?12:13,fontWeight:650,textAlign:"right",textVerticalAlign:"middle"}}}}
   ],
   series:buildSeries(frame)
  }},{{notMerge:false,lazyUpdate:true}});
