@@ -6,12 +6,39 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import re
 from pathlib import Path
 from typing import Any
 
 
 COLUMN_PALETTE = ["#2863f4", "#4bc3d5", "#2ab7a1", "#8b5cf6", "#ff3d7f"]
 LINE_PALETTE = ["#ff6845", "#8b5cf6", "#2ab7a1", "#ff3d7f", "#4bc3d5"]
+
+
+def _financial_market(component: dict[str, Any], props: dict[str, Any], rows: list[dict[str, Any]], x_field: str) -> str:
+    requested = str(
+        props.get("financialMarket")
+        or component.get("financialMarket")
+        or props.get("market")
+        or component.get("market")
+        or ""
+    ).strip().upper()
+    aliases = {
+        "CN": "CN", "A": "CN", "ASHARE": "CN", "A-SHARE": "CN", "A股": "CN",
+        "HK": "HK", "HONGKONG": "HK", "HONG KONG": "HK", "港股": "HK",
+        "US": "US", "USA": "US", "U.S.": "US", "美股": "US",
+    }
+    if requested in aliases:
+        return aliases[requested]
+    labels = " ".join(str(row.get(x_field) or "") for row in rows)
+    semantic_text = " ".join(
+        [str(component.get("title") or props.get("title") or ""), str(component.get("subtitle") or props.get("subtitle") or ""), labels]
+    )
+    cn = bool(re.search(r"A\s*股|北交所|沪市|深市|创业板|創業板|科创板|科創板|\b\d{6}\.(?:SH|SZ|BJ)\b", semantic_text, re.I))
+    hk = bool(re.search(r"港股|恒生指数|\b\d{4,5}\.HK\b|Hong\s*Kong", semantic_text, re.I))
+    us = bool(re.search(r"美股|US\s*stocks?|U\.S\.\s*stocks?|NASDAQ|NYSE|S&P\s*500", semantic_text, re.I))
+    detected = [market for market, matched in (("CN", cn), ("HK", hk), ("US", us)) if matched]
+    return detected[0] if len(detected) == 1 else ""
 
 
 def load_payload(path: str | None, data_json: str | None, default: dict[str, Any]) -> dict[str, Any]:
@@ -313,6 +340,7 @@ def normalize_payload(payload: dict[str, Any], title_override: str | None = None
     height = int(number_from_style(chart_style.get("height"), number_from_style(component.get("height") or props.get("height"), 420)))
     return {
         "type": "bar-line",
+        "financialMarket": _financial_market(component, props, rows, x_field),
         "title": str(title_override or component.get("title") or props.get("title") or "柱折图"),
         "xField": x_field,
         "data": rows,
@@ -344,7 +372,7 @@ def render_html(config: dict[str, Any]) -> str:
     x_axis_color = html.escape(str(style.get("xAxisColor") or axis_color))
     hover_color = html.escape(str(style.get("hoverColor") or "#f7f7f7"))
     return f"""<!doctype html>
-<html lang="zh-CN" data-theme="{config.get('themeMode', 'light')}">
+<html lang="zh-CN" data-theme="{config.get('themeMode', 'light')}"{f' data-financial-market="{html.escape(str(config.get("financialMarket") or ""))}"' if config.get("financialMarket") else ''}>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -352,6 +380,10 @@ def render_html(config: dict[str, Any]) -> str:
 <script>(() => {{ const theme = new URLSearchParams(location.search).get('theme'); if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme; }})();</script>
 <style>
 *{{box-sizing:border-box}}
+:root{{--sv-gain:#08745f;--sv-loss:#c43244;--sv-price-up:var(--sv-gain);--sv-price-down:var(--sv-loss)}}
+:root[data-theme="dark"]{{--sv-gain:#3ddc97;--sv-loss:#ff6b6b}}
+:root[data-financial-market="CN"],:root[data-financial-market="HK"]{{--sv-price-up:var(--sv-loss);--sv-price-down:var(--sv-gain)}}
+:root[data-financial-market="US"]{{--sv-price-up:var(--sv-gain);--sv-price-down:var(--sv-loss)}}
 html,body{{width:100%;height:100%;margin:0}}
 body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0;background:transparent;color:#171717}}
 :root[data-theme="dark"] body,body.theme-dark{{background:transparent;color:#f1f5f9}}
@@ -469,7 +501,22 @@ const DARK_STYLE = {{
 const isDark = document.documentElement.dataset.theme === 'dark' || config.themeMode === 'dark';
 const visual = deepMerge(deepMerge(DEFAULT_STYLE, isDark ? DARK_STYLE : {{}}), config.visualStyle || {{}});
 const DARK_COLOR_ALIASES = {{'#2863f4':'#8294ff','#4bc3d5':'#34d3ad','#2ab7a1':'#34d3ad','#8b5cf6':'#d19dff','#ff3d7f':'#ff7188','#ff6845':'#ff9592','#00b899':'#34d3ad','#ff2f57':'#ff7188','#94a3b8':'#93a0b3'}};
-const chartColor = color => isDark ? (DARK_COLOR_ALIASES[String(color || '').toLowerCase()] || color) : color;
+const chartColorCache = new Map();
+const chartColor = color => {{
+  const raw = String(color || '');
+  const themed = isDark ? (DARK_COLOR_ALIASES[raw.toLowerCase()] || raw) : raw;
+  const cacheKey = `${{document.documentElement.dataset.theme || 'light'}}:${{config.financialMarket || ''}}:${{themed}}`;
+  if (chartColorCache.has(cacheKey)) return chartColorCache.get(cacheKey);
+  if (!themed.includes('var(')) {{ chartColorCache.set(cacheKey, themed); return themed; }}
+  const probe = document.createElement('span');
+  probe.style.color = themed;
+  probe.style.display = 'none';
+  document.body.appendChild(probe);
+  const resolved = getComputedStyle(probe).color || themed;
+  probe.remove();
+  chartColorCache.set(cacheKey, resolved);
+  return resolved;
+}};
 (config.columnSeries || []).forEach(series => {{ series.color = chartColor(series.color); }});
 (config.lineSeries || []).forEach(series => {{ series.color = chartColor(series.color); }});
 function matchesColorRule(value, condition) {{

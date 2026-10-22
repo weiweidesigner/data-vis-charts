@@ -173,7 +173,7 @@ def _distribution_bin_sign(value: Any) -> int | None:
     if len(numbers) == 1:
         return 1 if numbers[0] > 0 else -1 if numbers[0] < 0 else 0
     low, high = min(numbers), max(numbers)
-    return -1 if high < 0 else 1 if low > 0 else 0
+    return -1 if high <= 0 and low < 0 else 1 if low >= 0 and high > 0 else 0
 
 
 def _apply_distribution_colors(
@@ -186,9 +186,9 @@ def _apply_distribution_colors(
         len(series) > 1 and bool(config.get("autoDetected"))
     )
     colors = {
-        -1: str(config.get("negative") or "#ff2f57"),
+        -1: str(config.get("negative") or "var(--sv-price-down)"),
         0: str(config.get("neutral") or "#94a3b8"),
-        1: str(config.get("positive") or "#00b899"),
+        1: str(config.get("positive") or "var(--sv-price-up)"),
     }
     for row in data:
         if not isinstance(row, dict):
@@ -234,8 +234,8 @@ def _ensure_distribution_style(
     style.setdefault("markStrategy", "distribution-polarity")
     style["distributionColor"] = {
         "source": "x",
-        "negative": "#ff2f57",
-        "positive": "#00b899",
+        "negative": "var(--sv-price-down)",
+        "positive": "var(--sv-price-up)",
         "neutral": "#94a3b8",
         "zero": 0,
         "autoDetected": True,
@@ -302,8 +302,8 @@ def _ensure_signed_direction_style(
     style["markStrategy"] = "signed-direction"
     style["autoDetected"] = True
     style["colorRules"] = [
-        {"condition": ">0", "color": "#00b899", "semantic": "positive"},
-        {"condition": "<0", "color": "#ff2f57", "semantic": "negative"},
+        {"condition": ">0", "color": "var(--sv-price-up)", "semantic": "positive"},
+        {"condition": "<0", "color": "var(--sv-price-down)", "semantic": "negative"},
         {"condition": "=0", "color": "#94a3b8", "semantic": "neutral"},
     ]
 
