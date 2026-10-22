@@ -10,6 +10,7 @@
   ],
   "payloadShape": {
     "title": "string",
+    "financialMarket": "CN | HK | US (optional; controls financial up/down colors)",
     "xField": "string",
     "yField": "string",
     "series": [{"field": "string", "label": "string"}],
@@ -18,6 +19,7 @@
   },
   "modelInstructions": [
     "Use for one primary numeric measure.",
+    "For financial direction charts set financialMarket explicitly: CN and HK use red-up/green-down; US uses green-up/red-down. Bars, legends, and tooltips must use the same convention.",
     "Sort periods chronologically and categories by user intent or value when appropriate.",
     "Default x-axis and y-axis tick labels should use 10px font size, matching grouped-bar charts.",
     "Place x-axis labels close to the x-axis baseline; default label baseline offset should be around 20px below the plot area, not the older 26px spacing.",

@@ -16,6 +16,37 @@ from typing import Any
 PALETTE = ["#4387f5", "#4bc3d5", "#f9730c", "#8b5cf6", "#10b981", "#ef4444"]
 
 
+def _financial_market(component: dict[str, Any], props: dict[str, Any], data: list[Any], x_field: str) -> str:
+    """Return an explicit or safely inferred market color convention."""
+    requested = str(
+        props.get("financialMarket")
+        or component.get("financialMarket")
+        or props.get("market")
+        or component.get("market")
+        or ""
+    ).strip().upper()
+    aliases = {
+        "CN": "CN", "A": "CN", "ASHARE": "CN", "A-SHARE": "CN", "A股": "CN",
+        "HK": "HK", "HONGKONG": "HK", "HONG KONG": "HK", "港股": "HK",
+        "US": "US", "USA": "US", "U.S.": "US", "美股": "US",
+    }
+    if requested in aliases:
+        return aliases[requested]
+    labels = " ".join(str(row.get(x_field) or "") for row in data if isinstance(row, dict))
+    semantic_text = " ".join(
+        [
+            str(component.get("title") or props.get("title") or ""),
+            str(component.get("subtitle") or props.get("subtitle") or ""),
+            labels,
+        ]
+    )
+    cn = bool(re.search(r"A\s*股|北交所|沪市|深市|创业板|創業板|科创板|科創板|\b\d{6}\.(?:SH|SZ|BJ)\b", semantic_text, re.I))
+    hk = bool(re.search(r"港股|恒生指数|\b\d{4,5}\.HK\b|Hong\s*Kong", semantic_text, re.I))
+    us = bool(re.search(r"美股|US\s*stocks?|U\.S\.\s*stocks?|NASDAQ|NYSE|S&P\s*500", semantic_text, re.I))
+    detected = [market for market, matched in (("CN", cn), ("HK", hk), ("US", us)) if matched]
+    return detected[0] if len(detected) == 1 else ""
+
+
 def extract_component(payload: dict[str, Any], component_type: str) -> dict[str, Any]:
     chart_payload = payload.get("chartPayload")
     if isinstance(chart_payload, dict):
@@ -327,6 +358,7 @@ def normalize_xy_series(component: dict[str, Any], component_type: str, default_
     legend.setdefault("visible", len(normalized_series) > 1)
     return {
         "type": component_type,
+        "financialMarket": _financial_market(component, props, data, x_field),
         "themeMode": str(
             props.get("themeMode") or props.get("theme") or component.get("themeMode") or component.get("theme") or "light"
         ).lower(),
@@ -358,7 +390,7 @@ def render_svg_chart(config: dict[str, Any], chart_kind: str) -> str:
     title = html.escape(config["title"])
     theme_mode = "dark" if config.get("themeMode") == "dark" else "light"
     return f"""<!doctype html>
-<html lang="zh-CN" data-theme="{theme_mode}">
+<html lang="zh-CN" data-theme="{theme_mode}"{f' data-financial-market="{html.escape(str(config.get("financialMarket") or ""))}"' if config.get("financialMarket") else ''}>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -366,8 +398,10 @@ def render_svg_chart(config: dict[str, Any], chart_kind: str) -> str:
 <script>(() => {{ const theme = new URLSearchParams(location.search).get('theme'); if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme; }})();</script>
 <style>
 *{{box-sizing:border-box}}
-:root{{--chart-text-primary:#171b22;--chart-text-secondary:#5f6876;--chart-text-muted:#8b94a2;--chart-border-subtle:#edf0f4;--chart-border-default:#a3a8b0;--chart-point-fill:#fff;--chart-highlight:#8a8a8a;--chart-tooltip-bg:rgba(59,59,59,.96)}}
-:root[data-theme="dark"]{{color-scheme:dark;--chart-text-primary:#f1f5f9;--chart-text-secondary:#c1cad7;--chart-text-muted:#93a0b3;--chart-border-subtle:#2b3544;--chart-border-default:#334052;--chart-point-fill:#181e28;--chart-highlight:#c1cad7;--chart-tooltip-bg:#202733}}
+:root{{--chart-text-primary:#171b22;--chart-text-secondary:#5f6876;--chart-text-muted:#8b94a2;--chart-border-subtle:#edf0f4;--chart-border-default:#a3a8b0;--chart-point-fill:#fff;--chart-highlight:#8a8a8a;--chart-tooltip-bg:rgba(59,59,59,.96);--sv-gain:#08745f;--sv-loss:#c43244;--sv-price-up:var(--sv-gain);--sv-price-down:var(--sv-loss)}}
+:root[data-theme="dark"]{{color-scheme:dark;--chart-text-primary:#f1f5f9;--chart-text-secondary:#c1cad7;--chart-text-muted:#93a0b3;--chart-border-subtle:#2b3544;--chart-border-default:#334052;--chart-point-fill:#181e28;--chart-highlight:#c1cad7;--chart-tooltip-bg:#202733;--sv-gain:#3ddc97;--sv-loss:#ff6b6b}}
+:root[data-financial-market="CN"],:root[data-financial-market="HK"]{{--sv-price-up:var(--sv-loss);--sv-price-down:var(--sv-gain)}}
+:root[data-financial-market="US"]{{--sv-price-up:var(--sv-gain);--sv-price-down:var(--sv-loss)}}
 html,body{{width:100%;height:100%;margin:0;background:transparent}}
 body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0;background:transparent;color:var(--chart-text-primary)}}
 .chart-component{{position:relative;width:100%;container-type:inline-size;height:clamp(320px,calc(100cqw * .42),{config["height"]}px);padding:0;background:transparent;overflow:visible}}
@@ -414,7 +448,22 @@ const legend = root.querySelector('.chart-legend');
 const tooltip = root.querySelector('.chart-tooltip');
 const NS = 'http://www.w3.org/2000/svg';
 const DARK_COLOR_ALIASES = {{'#4387f5':'#8294ff','#4bc3d5':'#34d3ad','#f9730c':'#f6ad55','#8b5cf6':'#d19dff','#10b981':'#34d3ad','#ef4444':'#ff7188','#00b899':'#34d3ad','#ff2f57':'#ff7188','#94a3b8':'#93a0b3'}};
-const chartColor = color => document.documentElement.dataset.theme === 'dark' ? (DARK_COLOR_ALIASES[String(color || '').toLowerCase()] || color) : color;
+const chartColorCache = new Map();
+const chartColor = color => {{
+  const raw = String(color || '');
+  const themed = document.documentElement.dataset.theme === 'dark' ? (DARK_COLOR_ALIASES[raw.toLowerCase()] || raw) : raw;
+  const cacheKey = `${{document.documentElement.dataset.theme || 'light'}}:${{config.financialMarket || ''}}:${{themed}}`;
+  if (chartColorCache.has(cacheKey)) return chartColorCache.get(cacheKey);
+  if (!themed.includes('var(')) {{ chartColorCache.set(cacheKey, themed); return themed; }}
+  const probe = document.createElement('span');
+  probe.style.color = themed;
+  probe.style.display = 'none';
+  document.body.appendChild(probe);
+  const resolved = getComputedStyle(probe).color || themed;
+  probe.remove();
+  chartColorCache.set(cacheKey, resolved);
+  return resolved;
+}};
 let tooltipPortalAckUntil = 0;
 const node = (name, attrs = {{}}, text = '') => {{
   const el = document.createElementNS(NS, name);
