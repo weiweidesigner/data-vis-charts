@@ -240,7 +240,6 @@ def _ensure_distribution_style(
         "positive": "#00b899",
         "neutral": "#94a3b8",
         "zero": 0,
-        "showZeroReference": True,
         "autoDetected": True,
         "preserveSeriesColors": len(series) > 1,
     }
@@ -428,8 +427,6 @@ body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Mic
 svg{{display:block;width:100%;height:100%;overflow:visible}}
 .grid-line{{stroke:var(--chart-border-subtle);stroke-width:1}}
 .axis-line{{stroke:var(--chart-border-default);stroke-width:1}}
-.distribution-zero-line{{stroke:var(--chart-text-muted);stroke-width:1.25;stroke-dasharray:4 4;pointer-events:none}}
-.distribution-zero-label{{fill:var(--chart-text-muted);font-size:10px;font-weight:700;text-anchor:middle}}
 .axis-label{{fill:var(--chart-text-secondary);font-size:10px;font-weight:400}}
 .x-label{{fill:var(--chart-text-secondary);font-size:10px;font-weight:400;text-anchor:middle}}
 .bar{{rx:0;cursor:crosshair}}
@@ -954,20 +951,6 @@ function render() {{
       hit.addEventListener('mouseleave', () => {{ clearHighlight(); hideTooltip(); }});
       svg.appendChild(hit);
     }});
-    const distribution = config.visualStyle?.distributionColor;
-    if (distribution && distribution.showZeroReference !== false) {{
-      const signs = config.data.map(row => Number(row.__distributionSign));
-      const neutralIndex = signs.findIndex(sign => sign === 0);
-      let zeroX = neutralIndex >= 0 ? xCenter(neutralIndex) : null;
-      if (zeroX === null) {{
-        const positiveIndex = signs.findIndex((sign, index) => sign > 0 && signs.slice(0, index).some(previous => previous < 0));
-        if (positiveIndex >= 0) zeroX = margin.left + slot * positiveIndex;
-      }}
-      if (zeroX !== null) {{
-        svg.appendChild(node('line', {{x1:zeroX,y1:margin.top,x2:zeroX,y2:margin.top+plotH,class:'distribution-zero-line'}}));
-        svg.appendChild(node('text', {{x:zeroX,y:margin.top+11,class:'distribution-zero-label'}}, '0%'));
-      }}
-    }}
   }}
   if (!shouldShowLegend()) {{
     legend.style.display = 'none';
