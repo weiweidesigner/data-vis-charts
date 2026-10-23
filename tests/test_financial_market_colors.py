@@ -63,3 +63,39 @@ def test_us_market_keeps_green_up_red_down(renderer_name, component_type):
     assert normalized["financialMarket"] == "US"
     assert 'data-financial-market="US"' in document
     assert ':root[data-financial-market="US"]{--sv-price-up:var(--sv-gain);--sv-price-down:var(--sv-loss)}' in document
+
+
+@pytest.mark.parametrize("renderer_name", ["bar_chart", "grouped_bar", "bar_line"])
+def test_missing_market_is_not_silently_us_for_financial_distribution(renderer_name):
+    renderer = load_renderer(renderer_name)
+    with pytest.raises(ValueError, match="requires explicit financialMarket"):
+        renderer._financial_market({"title": "10月23日全市场涨跌幅分布：逾八成个股上涨"}, {}, [], "bin")
+
+
+@pytest.mark.parametrize("renderer_name", ["bar_chart", "grouped_bar", "bar_line"])
+@pytest.mark.parametrize("market", ["CN", "HK", "US"])
+def test_explicit_source_market_survives_generic_title(renderer_name, market):
+    renderer = load_renderer(renderer_name)
+    assert renderer._financial_market({"title": "全市场涨跌幅分布", "financialMarket": market}, {}, [], "bin") == market
+
+
+@pytest.mark.parametrize("renderer_name", ["bar_chart", "grouped_bar", "bar_line"])
+def test_nonfinancial_chart_does_not_acquire_a_market(renderer_name):
+    renderer = load_renderer(renderer_name)
+    assert renderer._financial_market({"title": "请求延迟分布"}, {}, [], "bin") == ""
+    with pytest.raises(ValueError, match="Unsupported financialMarket"):
+        renderer._financial_market({"financialMarket": "bogus"}, {}, [], "bin")
+
+
+@pytest.mark.parametrize("market", ["CN", "HK", "US"])
+def test_breadth_polarity_comes_from_bins_not_positive_counts(market):
+    renderer = load_renderer("bar_chart")
+    payload = {
+        "title": "全市场涨跌幅分布", "financialMarket": market,
+        "xField": "bin", "yField": "count",
+        "data": [{"bin": "≤-5%", "count": 93}, {"bin": "平盘", "count": 137}, {"bin": "1~3%", "count": 2118}],
+    }
+    result = renderer.normalize_xy_series(payload, "bar", "Test", "bar")
+    assert result["financialMarket"] == market
+    assert [row["__markColors"]["count"] for row in result["data"]] == ["var(--sv-price-down)", "#94a3b8", "var(--sv-price-up)"]
+    assert f'data-financial-market="{market}"' in renderer.render_svg_chart(result, "bar")

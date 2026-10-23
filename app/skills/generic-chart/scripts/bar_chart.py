@@ -32,6 +32,8 @@ def _financial_market(component: dict[str, Any], props: dict[str, Any], data: li
     }
     if requested in aliases:
         return aliases[requested]
+    if requested:
+        raise ValueError("Unsupported financialMarket; use CN, HK or US from the source market")
     labels = " ".join(str(row.get(x_field) or "") for row in data if isinstance(row, dict))
     semantic_text = " ".join(
         [
@@ -44,7 +46,11 @@ def _financial_market(component: dict[str, Any], props: dict[str, Any], data: li
     hk = bool(re.search(r"港股|恒生指数|\b\d{4,5}\.HK\b|Hong\s*Kong", semantic_text, re.I))
     us = bool(re.search(r"美股|US\s*stocks?|U\.S\.\s*stocks?|NASDAQ|NYSE|S&P\s*500", semantic_text, re.I))
     detected = [market for market, matched in (("CN", cn), ("HK", hk), ("US", us)) if matched]
-    return detected[0] if len(detected) == 1 else ""
+    if len(detected) == 1:
+        return detected[0]
+    if re.search(r"涨跌幅|漲跌幅|个股|個股|stock.{0,20}(?:return|change|distribution)", semantic_text, re.I):
+        raise ValueError("Financial direction chart requires explicit financialMarket (CN/HK/US) from the question or data source; do not infer it from language or bin signs")
+    return ""
 
 
 def extract_component(payload: dict[str, Any], component_type: str) -> dict[str, Any]:

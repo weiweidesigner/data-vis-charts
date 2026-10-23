@@ -12,7 +12,7 @@ SCRIPTS = ROOT / "app/skills/generic-chart/scripts"
 
 CASES = {
     "bar_chart": {
-        "type": "bar", "theme": "dark", "title": "涨跌幅", "xField": "name",
+        "type": "bar", "theme": "dark", "financialMarket": "CN", "title": "涨跌幅", "xField": "name",
         "series": [{"field": "value", "label": "涨跌幅"}],
         "data": [{"name": "A", "value": 1.2}, {"name": "B", "value": -0.8}],
     },

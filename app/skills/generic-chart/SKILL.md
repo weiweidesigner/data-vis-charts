@@ -37,6 +37,8 @@ Scripts live in `scripts/`.
 
 ## Routing Notes
 
+Financial direction charts must carry the source market in every payload as `financialMarket`: `CN` for A-shares, `HK` for Hong Kong, `US` for US securities. Carry this from the user's request and verified data source even when the title only says “全市场” or a date. CN/HK use red-up/green-down; US uses green-up/red-down. Use `var(--sv-price-up)` / `var(--sv-price-down)` rather than hardcoded red/green. A financial-direction payload with no resolvable market is rejected instead of silently assuming US colors; correct the payload and retry. Do not infer market from language, frequency counts, or the signs of bins. For distributions, sign comes from the X-axis bins, never the nonnegative bar heights.
+
 Always prefer a concrete script for the requested chart type. Do not route through a generic adapter.
 
 The application may use JEV to preselect a primary renderer and at most one distinct supporting renderer from the generic and business-chart catalogs. Treat that result as a bounded visualization candidate set, not as permission to skip schema validation, invent data, or force a second chart. The generative planner must still select required upstream data/transformation steps and read every selected renderer's schema before creating CLI arguments.
