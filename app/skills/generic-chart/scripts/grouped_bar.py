@@ -415,8 +415,8 @@ body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Mic
 svg{{display:block;width:100%;height:100%;overflow:visible}}
 .grid-line{{stroke:var(--chart-border-subtle);stroke-width:1}}
 .axis-line{{stroke:var(--chart-border-default);stroke-width:1}}
-.axis-label{{fill:var(--chart-text-secondary);font-size:10px;font-weight:400}}
-.x-label{{fill:var(--chart-text-secondary);font-size:10px;font-weight:400;text-anchor:middle}}
+.axis-label{{fill:var(--chart-text-secondary);font-size:12px;font-weight:400}}
+.x-label{{fill:var(--chart-text-secondary);font-size:12px;font-weight:400;text-anchor:middle}}
 .bar{{rx:0;cursor:crosshair}}
 .line-path{{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}}
 .point{{fill:var(--chart-point-fill);stroke-width:2;cursor:crosshair}}
@@ -425,14 +425,15 @@ svg{{display:block;width:100%;height:100%;overflow:visible}}
 .chart-legend{{position:absolute;left:8px;right:8px;bottom:4px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px 18px;color:var(--chart-text-secondary);font-size:10px;line-height:1.2;text-align:center;pointer-events:none}}
 .legend-item{{display:flex;align-items:center;gap:7px;white-space:nowrap}}
 .legend-dot{{width:8px;height:8px;border-radius:50%;flex:none}}
-.chart-tooltip{{position:fixed;z-index:2147483647;display:inline-grid;min-width:180px;width:max-content;max-width:min(220px,calc(100vw - 24px));padding:8px 10px;background:var(--chart-tooltip-bg);color:#fff;border-radius:6px;font-size:10px;line-height:1.35;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .08s ease;box-shadow:none;filter:none;white-space:normal}}
+.chart-tooltip{{position:fixed;z-index:2147483647;display:inline-grid;row-gap:2px;min-width:180px;width:max-content;max-width:min(260px,calc(100vw - 24px));padding:10px 12px;background:var(--chart-tooltip-bg);color:#fff;border-radius:6px;font-size:12px;line-height:1.5;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .08s ease;box-shadow:none;filter:none;white-space:normal}}
 .chart-tooltip::after{{content:"";position:absolute;left:var(--arrow-left,50%);bottom:-5px;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:5px solid var(--chart-tooltip-bg)}}
 .chart-tooltip.active{{opacity:1;visibility:visible}}
-.tooltip-row{{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:12px;min-height:17px;white-space:normal}}
+.chart-tooltip>strong{{display:block;color:#d8d8d8;margin-bottom:3px;font-size:11px;font-weight:500;line-height:1.4}}
+.tooltip-row{{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:14px;min-height:22px;white-space:normal}}
 .tooltip-row b{{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}}
-.tooltip-label{{display:grid;grid-template-columns:7px minmax(0,1fr);align-items:start;gap:5px;color:#f5f5f5;min-width:0;overflow-wrap:anywhere}}
-.tooltip-dot{{width:7px;height:7px;margin-top:.325em;border-radius:50%;flex:none}}
-@media(max-width:680px){{.chart-component{{height:clamp(248px,calc(100cqw * .72),320px);padding:0}}.chart-title{{min-height:18px;max-height:38px;font-size:14px;line-height:1.28;padding:0}}.chart-stage{{height:calc(100% - 50px);margin-top:6px}}.axis-label,.x-label{{font-size:10px}}.chart-legend{{left:0;right:0;bottom:0;gap:8px 12px;min-height:30px;font-size:10px;align-content:center}}.legend-item{{gap:5px;max-width:42%;overflow:hidden;text-overflow:ellipsis}}.legend-dot{{width:8px;height:8px}}.chart-tooltip{{min-width:0;max-width:220px;font-size:10px;padding:6px 8px;white-space:normal}}}}
+.tooltip-label{{display:grid;grid-template-columns:8px minmax(0,1fr);align-items:start;gap:6px;color:#f5f5f5;min-width:0;overflow-wrap:anywhere}}
+.tooltip-dot{{width:8px;height:8px;margin-top:.35em;border-radius:50%;flex:none}}
+@media(max-width:680px){{.chart-component{{height:clamp(248px,calc(100cqw * .72),320px);padding:0}}.chart-title{{min-height:18px;max-height:38px;font-size:14px;line-height:1.28;padding:0}}.chart-stage{{height:calc(100% - 50px);margin-top:6px}}.axis-label,.x-label{{font-size:11px}}.chart-legend{{left:0;right:0;bottom:0;gap:8px 12px;min-height:30px;font-size:10px;align-content:center}}.legend-item{{gap:5px;max-width:42%;overflow:hidden;text-overflow:ellipsis}}.legend-dot{{width:8px;height:8px}}.chart-tooltip{{min-width:0;max-width:240px;font-size:11px;padding:8px 10px;white-space:normal}}}}
 </style>
 </head>
 <body>
@@ -616,13 +617,13 @@ function ensureParentTooltipStyle(doc) {{
   const style = doc.createElement('style');
   style.id = 'grouped-bar-tooltip-portal-style';
   style.textContent = `
-    .grouped-bar-tooltip-portal{{position:fixed;z-index:2147483647;display:inline-grid;min-width:180px;width:max-content;max-width:min(220px,calc(100vw - 24px));padding:8px 10px;background:rgba(59,59,59,.96);color:#fff;border-radius:6px;font:10px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;pointer-events:none;opacity:0;visibility:hidden;box-shadow:none;filter:none;white-space:normal;transition:opacity .08s ease}}
+    .grouped-bar-tooltip-portal{{position:fixed;z-index:2147483647;display:inline-grid;row-gap:2px;min-width:180px;width:max-content;max-width:min(260px,calc(100vw - 24px));padding:10px 12px;background:rgba(59,59,59,.96);color:#fff;border-radius:6px;font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;pointer-events:none;opacity:0;visibility:hidden;box-shadow:none;filter:none;white-space:normal;transition:opacity .08s ease}}
     .grouped-bar-tooltip-portal.active{{opacity:1;visibility:visible}}
-    .grouped-bar-tooltip-portal strong{{display:block;color:#d8d8d8;margin-bottom:3px;font-size:9px;font-weight:400;line-height:1.2}}
-    .grouped-bar-tooltip-portal .tooltip-row{{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:12px;min-height:17px;white-space:normal}}
+    .grouped-bar-tooltip-portal strong{{display:block;color:#d8d8d8;margin-bottom:3px;font-size:11px;font-weight:500;line-height:1.4}}
+    .grouped-bar-tooltip-portal .tooltip-row{{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:14px;min-height:22px;white-space:normal}}
     .grouped-bar-tooltip-portal .tooltip-row b{{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}}
-    .grouped-bar-tooltip-portal .tooltip-label{{display:grid;grid-template-columns:7px minmax(0,1fr);align-items:start;gap:5px;color:#f5f5f5;min-width:0;overflow-wrap:anywhere}}
-    .grouped-bar-tooltip-portal .tooltip-dot{{width:7px;height:7px;margin-top:.325em;border-radius:50%;flex:none}}
+    .grouped-bar-tooltip-portal .tooltip-label{{display:grid;grid-template-columns:8px minmax(0,1fr);align-items:start;gap:6px;color:#f5f5f5;min-width:0;overflow-wrap:anywhere}}
+    .grouped-bar-tooltip-portal .tooltip-dot{{width:8px;height:8px;margin-top:.35em;border-radius:50%;flex:none}}
     .grouped-bar-tooltip-portal::after{{content:"";position:absolute;left:var(--arrow-left,50%);bottom:-5px;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:5px solid rgba(59,59,59,.96)}}
   `;
   doc.head.appendChild(style);
@@ -746,12 +747,12 @@ function showTooltip(anchorX, rows, xLabel, gridTop) {{
       gridTop,
       gap: tooltipGap,
       offsetY: 0,
-      maxWidth: 220,
+      maxWidth: 260,
       background: 'rgba(59,59,59,.96)',
       color: '#fff',
       borderRadius: 6,
-      padding: '6px 8px',
-      fontSize: 10,
+      padding: '10px 12px',
+      fontSize: 12,
     }});
     const fallbackTime = Date.now();
     setTimeout(() => {{
@@ -796,7 +797,7 @@ function estimateAxisWidth(labels) {{
   }}, 4);
   return Math.max(28, Math.min(78, Math.ceil(Math.max(...labels.map(widthFor), 0)) + 1));
 }}
-function measureAxisWidth(labels, fontSize = 10, fontWeight = 400) {{
+function measureAxisWidth(labels, fontSize = 12, fontWeight = 400) {{
   try {{
     const canvas = measureAxisWidth.canvas || (measureAxisWidth.canvas = document.createElement('canvas'));
     const ctx = canvas.getContext('2d');
@@ -807,7 +808,7 @@ function measureAxisWidth(labels, fontSize = 10, fontWeight = 400) {{
     return estimateAxisWidth(labels);
   }}
 }}
-function sampledXAxisIndexes(labels, slot, fontSize = 10, fontWeight = 400) {{
+function sampledXAxisIndexes(labels, slot, fontSize = 12, fontWeight = 400) {{
   const count = labels.length;
   if (count <= 0) return new Set();
   const gap = 8;
