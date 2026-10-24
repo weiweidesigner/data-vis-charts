@@ -21,9 +21,10 @@ def render(component: str) -> str:
 @pytest.mark.parametrize("component", ["bar_chart", "grouped_bar"])
 def test_bar_charts_use_readable_tooltip_and_axis_typography(component):
     html = render(component)
-    assert ".axis-label{fill:var(--chart-text-secondary);font-size:12px" in html
-    assert ".x-label{fill:var(--chart-text-secondary);font-size:12px" in html
-    assert "font-size:12px;line-height:1.5" in html
-    assert "min-height:22px" in html
-    assert "fontSize: 12" in html
-    assert "function measureAxisWidth(labels, fontSize = 12" in html
+    assert ".axis-label{fill:var(--chart-text-secondary);font-size:13px" in html
+    assert ".x-label{fill:var(--chart-text-secondary);font-size:13px" in html
+    assert "font-size:14px;line-height:1.55" in html
+    assert "min-height:26px" in html
+    assert "fontSize: 14" in html
+    assert "function measureAxisWidth(labels, fontSize = 13" in html
+    assert "measureAxisWidth(tickLabels, 13, 400)" in html
