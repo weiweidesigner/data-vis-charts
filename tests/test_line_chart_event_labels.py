@@ -133,3 +133,14 @@ def test_inside_event_cards_use_free_grid_space_without_covering_curve():
             result=page.evaluate('''()=>{const boxes=[...document.querySelectorAll('.event-label-box rect')].map(e=>e.getBBox()),lines=[...document.querySelectorAll('.grid-line')],left=+lines[0].getAttribute('x1'),right=+lines[0].getAttribute('x2'),top=Math.min(...lines.map(e=>+e.getAttribute('y1'))),bottom=Math.max(...lines.map(e=>+e.getAttribute('y1')));return {count:boxes.length,bounds:boxes.every(b=>b.x>=left&&b.x+b.width<=right&&b.y>=top&&b.y+b.height<=bottom),overlap:boxes.some((a,i)=>boxes.slice(i+1).some(b=>a.x<b.x+b.width&&b.x<a.x+a.width&&a.y<b.y+b.height&&b.y<a.y+a.height))}}''')
             assert result=={'count':3,'bounds':True,'overlap':False}
         browser.close()
+
+def test_allow_overlap_still_prefers_vertical_gap_above_v_shaped_curve():
+    import importlib.util
+    from playwright.sync_api import sync_playwright
+    spec=importlib.util.spec_from_file_location('soft_avoid_test',ROOT/'app/skills/generic-chart/scripts/group_line.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+    data=[{'date':str(i),'close':80+abs(i-4)*10} for i in range(9)]
+    payload={'type':'group-line','title':'Price','xField':'date','data':data,'series':[{'field':'close','label':'Close','axis':'right'}],'leftAxis':{'visible':False},'rightAxis':{'visible':True},'visualStyle':{'chart':{'height':'200px','minHeight':'200px'},'overlays':[{'type':'pointMarkers','targetField':'close','x':'4','eventTime':'2026-01-01','eventTitle':'事件日','labelBox':True,'labelPlacement':'inside','allowCurveOverlap':True}]}}
+    with sync_playwright() as p:
+        browser=p.chromium.launch();page=browser.new_page(viewport={'width':720,'height':400});page.set_content(m.render_document(payload));page.wait_for_selector('.event-label-box')
+        assert page.evaluate('''()=>{const b=document.querySelector('.event-label-box rect').getBBox(),path=document.querySelector('.line-path');for(let i=0;i<path.getTotalLength();i++){const p=path.getPointAtLength(i);if(p.x>b.x&&p.x<b.x+b.width&&p.y>b.y&&p.y<b.y+b.height)return false;}return true}''')
+        browser.close()

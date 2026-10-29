@@ -1348,13 +1348,17 @@ function drawEventLabel(parent,x,y,overlay,color,dateText,titleText,bounds) {{
   if(!candidates.length)candidates.push(bounds.top);
   let best=null;
   for(const bx of horizontal)for(const candidate of candidates){{
+    if(overlay.allowCurveOverlap && Math.abs(bx-anchorX)>width*.65)continue;
     const by=Math.max(bounds.top,Math.min(bounds.bottom-height,candidate));
     const below=by+height/2>y;
     const r={{x:bx,y:by,w:width,h:height}},padded={{x:bx-4,y:by-4,w:width+8,h:height+8}};
-    let score=Math.abs(bx+width/2-x)*.06+Math.abs(by+height/2-y)*.03+(below===preferBelow?0:2);
+    let score=Math.abs(bx+width/2-x)*(overlay.allowCurveOverlap ? .10 : .06)+Math.abs(by+height/2-y)*(overlay.allowCurveOverlap ? .008 : .03)+(below===preferBelow?0:2);
     for(const old of eventLabelLayout.boxes){{const area=Math.max(0,Math.min(bx+width+4,old.x+old.w)-Math.max(bx-4,old.x))*Math.max(0,Math.min(by+height+4,old.y+old.h)-Math.max(by-4,old.y));if(area)score+=100000000+area;}}
     for(const point of (overlay.allowCurveOverlap?eventLabelLayout.anchorPoints||[]:eventLabelLayout.points))if(point[0]>=padded.x&&point[0]<=padded.x+padded.w&&point[1]>=padded.y&&point[1]<=padded.y+padded.h)score+=100000;
-    if(!overlay.allowCurveOverlap)for(const [a,b] of eventLabelLayout.segments)if(segmentHitsBox(a,b,padded))score+=10000;
+    for(const [a,b] of eventLabelLayout.segments)if(segmentHitsBox(a,b,padded)){{
+      // Allowed overlap remains a soft cost: prefer vertical gaps over hiding the curve.
+      score+=overlay.allowCurveOverlap?Math.hypot(b[0]-a[0],b[1]-a[1])*2:10000;
+    }}
     if(!best||score<best.score)best={{...r,score}};
   }}
   if(overlay.outsideBox)best={{x:overlay.outsideBox.x,y:overlay.outsideBox.y,w:width,h:height}};

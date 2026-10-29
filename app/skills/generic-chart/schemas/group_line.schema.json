@@ -86,7 +86,7 @@
     }
   },
   "modelInstructions": [
-    "pointMarkers.allowCurveOverlap defaults false. When true, permit cards to overlap ordinary curves while protecting marked anchors, card spacing and plot bounds; keep normal card typography/padding.",
+    "pointMarkers.allowCurveOverlap defaults false. When true, prefer vertical gaps and minimize covered curve length; allow limited overlap only when needed, while protecting marked anchors, card spacing and plot bounds; keep normal card typography/padding.",
     "Use no more than 6-8 visible series unless the user explicitly asks.",
     "For ordinary grouped-line examples, bind every series to axis='right', set leftAxis.visible=false, set rightAxis.visible=true, and set visualStyle.yAxis.position='right'.",
     "For event-window cumulative-return charts with xField day/window_day/relative_day, provide one row for every integer day in the window and forward-fill weekends/holidays. If early non-trading days are missing, use 0 until the first trading-day return appears.",
