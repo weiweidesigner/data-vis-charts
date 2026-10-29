@@ -1335,23 +1335,26 @@ function drawEventLabel(parent,x,y,overlay,color,dateText,titleText,bounds) {{
   const titleHeight=fontSize*1.3,dateHeight=dateFontSize*1.3;
   const height=2*py+dates.length*dateHeight+lineGap+lines.length*titleHeight;
   const gap=toNumber(overlay.labelGap,12),preferBelow=overlay.labelPosition==='bottom';
-  // Keep horizontal anchors chronological; solve collisions only vertically.
+  // Prefer the exact-date anchor; search both axes when it would cover data.
   const anchorWidth=Math.min(bounds.right-bounds.left,toNumber(overlay.timelineWidth,210));
   const center=Math.max(bounds.left+anchorWidth/2,Math.min(bounds.right-anchorWidth/2,x));
-  const bx=Math.max(bounds.left,Math.min(bounds.right-width,center-width/2));
+  const anchorX=Math.max(bounds.left,Math.min(bounds.right-width,center-width/2));
+  const horizontal=[anchorX];
+  for(let x=bounds.left;x<=bounds.right-width;x+=Math.max(24,width/2))horizontal.push(x);
+  horizontal.push(bounds.right-width);
   const rowHeight=toNumber(overlay.timelineRowHeight,height);
   const candidates=[];
   for(let by=bounds.top;by<=bounds.bottom-rowHeight;by+=rowHeight+8)candidates.push(by);
   if(!candidates.length)candidates.push(bounds.top);
   let best=null;
-  for(const candidate of candidates){{
+  for(const bx of horizontal)for(const candidate of candidates){{
     const by=Math.max(bounds.top,Math.min(bounds.bottom-height,candidate));
     const below=by+height/2>y;
     const r={{x:bx,y:by,w:width,h:height}},padded={{x:bx-4,y:by-4,w:width+8,h:height+8}};
     let score=Math.abs(bx+width/2-x)*.06+Math.abs(by+height/2-y)*.03+(below===preferBelow?0:2);
-    for(const old of eventLabelLayout.boxes){{const area=Math.max(0,Math.min(bx+width+4,old.x+old.w)-Math.max(bx-4,old.x))*Math.max(0,Math.min(by+height+4,old.y+old.h)-Math.max(by-4,old.y));if(area)score+=1000000+area;}}
-    for(const point of eventLabelLayout.points)if(point[0]>=padded.x&&point[0]<=padded.x+padded.w&&point[1]>=padded.y&&point[1]<=padded.y+padded.h)score+=80;
-    for(const [a,b] of eventLabelLayout.segments)if(segmentHitsBox(a,b,padded))score+=40;
+    for(const old of eventLabelLayout.boxes){{const area=Math.max(0,Math.min(bx+width+4,old.x+old.w)-Math.max(bx-4,old.x))*Math.max(0,Math.min(by+height+4,old.y+old.h)-Math.max(by-4,old.y));if(area)score+=100000000+area;}}
+    for(const point of eventLabelLayout.points)if(point[0]>=padded.x&&point[0]<=padded.x+padded.w&&point[1]>=padded.y&&point[1]<=padded.y+padded.h)score+=100000;
+    for(const [a,b] of eventLabelLayout.segments)if(segmentHitsBox(a,b,padded))score+=10000;
     if(!best||score<best.score)best={{...r,score}};
   }}
   if(overlay.outsideBox)best={{x:overlay.outsideBox.x,y:overlay.outsideBox.y,w:width,h:height}};
@@ -1415,7 +1418,7 @@ function drawMobileEventLabels(events,svg) {{
     const chosen=[...new Set([ordered.length-1,index,...ordered.map((_,i)=>i).reverse()])].slice(0,3);
     const selected=chosen.map(i=>{{
       const args=[...ordered[i]];args[0]=labels;
-      const labelWidth=Math.min(136,(args[7].right-args[7].left-24)/2);
+      const labelWidth=Math.min(108,Math.max(64,(args[7].right-args[7].left-24)/3-8));
       args[3]={{...args[3],mobileGrid:true,timelineWidth:labelWidth,labelMinWidth:labelWidth,labelMaxWidth:labelWidth,fontSize:11,dateFontSize:10,borderColor:i===index?args[4]:undefined}};
       return args;
     }}).sort((a,b)=>a[1]-b[1]);

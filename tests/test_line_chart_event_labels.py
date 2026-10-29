@@ -117,3 +117,19 @@ def test_embedded_line_keeps_svg_legend_and_axis_text_inside_frame():
             page.goto('about:blank');page.set_content('<iframe style="border:0;width:'+str(width)+'px;height:400px" srcdoc="'+html.escape(m.render_document(payload),quote=True)+'"></iframe>')
             frame=page.frames[1];frame.wait_for_selector('.svg-legend');frame.wait_for_function('[...document.querySelectorAll("svg text")].every(e=>e.getBoundingClientRect().bottom<=innerHeight)')
         browser.close()
+
+
+def test_inside_event_cards_use_free_grid_space_without_covering_curve():
+    import importlib.util
+    from playwright.sync_api import sync_playwright
+    spec=importlib.util.spec_from_file_location('inside_test',ROOT/'app/skills/generic-chart/scripts/group_line.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+    data=[{'date':str(i),'close':100+(i%7)*3} for i in range(45)]
+    marks=[{'type':'pointMarkers','targetField':'close','x':str(i),'eventTime':'2026-01-01','eventTitle':title,'labelBox':True,'labelPlacement':'inside'} for i,title in [(10,'交易日'),(11,'披露日'),(12,'事件日')]]
+    payload={'type':'group-line','title':'Price','xField':'date','data':data,'series':[{'field':'close','label':'Close','axis':'right'}],'leftAxis':{'visible':False},'rightAxis':{'visible':True},'visualStyle':{'overlays':marks}}
+    with sync_playwright() as p:
+        browser=p.chromium.launch();page=browser.new_page()
+        for width in (1280,623,390,320):
+            page.set_viewport_size({'width':width,'height':900});page.goto('about:blank');page.set_content(m.render_document(payload));page.wait_for_selector('.event-label-box')
+            result=page.evaluate('''()=>{const boxes=[...document.querySelectorAll('.event-label-box rect')].map(e=>e.getBBox()),lines=[...document.querySelectorAll('.grid-line')],left=+lines[0].getAttribute('x1'),right=+lines[0].getAttribute('x2'),top=Math.min(...lines.map(e=>+e.getAttribute('y1'))),bottom=Math.max(...lines.map(e=>+e.getAttribute('y1')));return {count:boxes.length,bounds:boxes.every(b=>b.x>=left&&b.x+b.width<=right&&b.y>=top&&b.y+b.height<=bottom),overlap:boxes.some((a,i)=>boxes.slice(i+1).some(b=>a.x<b.x+b.width&&b.x<a.x+a.width&&a.y<b.y+b.height&&b.y<a.y+a.height))}}''')
+            assert result=={'count':3,'bounds':True,'overlap':False}
+        browser.close()
