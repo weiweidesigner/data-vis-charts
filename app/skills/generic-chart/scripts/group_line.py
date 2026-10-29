@@ -79,7 +79,7 @@ def component_schema() -> dict[str, Any]:
                 "tooltip": "visible, placement(cursor|fixed|topGrid|aboveFirstGrid), background, color, borderRadius, padding, fontSize, maxWidth, arrow, showUnit",
                 "hover": "bandColor, bandOpacity",
                 "positionLine": "visible, color, opacity, width, dasharray; vertical x-position guide shown on hover",
-                "overlays": "referenceLine, selectedBand, thresholdMarkers, pointMarkers; pointMarkers supports labelBox, eventTime, eventTitle, labelPosition(top|bottom), labelBackground, borderColor, labelBorderRadius, connectorColor",
+                "overlays": "referenceLine, selectedBand, thresholdMarkers, pointMarkers; pointMarkers supports labelBox, eventTime, eventTitle, labelPosition(top|bottom), labelPlacement(outside-top reserves a separate lane above plot; all labels retained on mobile), labelBackground, borderColor, labelBorderRadius, connectorColor",
                 "customCss": "raw CSS appended inside this component",
             }
         },
@@ -1354,14 +1354,36 @@ function drawEventLabel(parent,x,y,overlay,color,dateText,titleText,bounds) {{
     for(const [a,b] of eventLabelLayout.segments)if(segmentHitsBox(a,b,padded))score+=40;
     if(!best||score<best.score)best={{...r,score}};
   }}
+  if(overlay.outsideBox)best={{x:overlay.outsideBox.x,y:overlay.outsideBox.y,w:width,h:height}};
   eventLabelLayout.boxes.push(best);
   const below=best.y+height/2>y,anchorY=below?best.y:best.y+height;
   (eventLabelLayout.connectorLayer || parent).appendChild(svgEl('line',{{x1:x,y1:y+(below?1:-1)*toNumber(overlay.radius,4.2),x2:Math.max(best.x+px,Math.min(best.x+width-px,x)),y2:anchorY,stroke:overlay.connectorColor||overlay.borderColor||color,'stroke-width':toNumber(overlay.connectorWidth,1),opacity:toNumber(overlay.connectorOpacity,.8),'pointer-events':'none'}}));
-  const group=svgEl('g',{{class:'event-label-box','pointer-events':'none'}});
+  const group=svgEl('g',{{class:'event-label-box','data-placement':overlay.labelPlacement||'inside','pointer-events':'none'}});
   group.appendChild(svgEl('rect',{{x:best.x,y:best.y,width,height,rx:toNumber(overlay.labelBorderRadius,4),fill:overlay.labelBackground||'var(--chart-point-fill)',stroke:overlay.borderColor||'#d0d5dd','stroke-width':toNumber(overlay.labelBorderWidth,1),opacity:toNumber(overlay.labelOpacity,.98)}}));
   dates.forEach((t,i)=>group.appendChild(svgEl('text',{{x:best.x+px,y:best.y+py+dateFontSize+i*dateHeight,fill:overlay.dateColor||'var(--chart-text-secondary)','font-size':dateFontSize,'font-weight':dateWeight}},t)));
   lines.forEach((t,i)=>group.appendChild(svgEl('text',{{x:best.x+px,y:best.y+py+dates.length*dateHeight+lineGap+fontSize+i*titleHeight,fill:overlay.titleColor||overlay.labelColor||'var(--chart-text-primary)','font-size':fontSize,'font-weight':weight}},t)));
   parent.appendChild(group);
+}}
+function drawOutsideTopEventLabels(events,parent) {{
+  if(!events.length){{stage.style.marginTop='';return;}}
+  const ordered=[...events].sort((a,b)=>a[1]-b[1]);
+  const bounds=ordered[0][7],gap=8,available=Math.max(40,bounds.right-bounds.left-24);
+  const columns=Math.max(1,Math.min(ordered.length,Math.floor((available+gap)/(108+gap))));
+  const natural=Math.max(...ordered.map(args=>eventLabelNaturalWidth(args[3],args[5],args[6],available)));
+  const cardWidth=Math.min(natural,(available-gap*(columns-1))/columns);
+  const rowHeights=[];
+  ordered.forEach((args,i)=>{{const row=Math.floor(i/columns);rowHeights[row]=Math.max(rowHeights[row]||0,eventLabelNaturalHeight(args[3],args[5],args[6],cardWidth));}});
+  const laneHeight=rowHeights.reduce((sum,h)=>sum+h,0)+gap*Math.max(0,rowHeights.length-1)+24;
+  stage.style.marginTop=`${{4+laneHeight}}px`;
+  const groupWidth=columns*cardWidth+gap*(columns-1);
+  const startX=Math.max(bounds.left+12,Math.min(bounds.right-12-groupWidth,ordered[0][1]-cardWidth/2));
+  ordered.forEach((event,i)=>{{
+    const args=[...event],row=Math.floor(i/columns),col=i%columns;
+    const y=-laneHeight+12+rowHeights.slice(0,row).reduce((sum,h)=>sum+h+gap,0);
+    args[3]={{...args[3],timelineWidth:cardWidth,outsideBox:{{x:startX+col*(cardWidth+gap),y}}}};
+    // The entire card is above SVG y=0, outside every curve/grid coordinate.
+    drawEventLabel(...args);
+  }});
 }}
 function shouldShowLineLegend(series){{
   return visual.legend.visible!==false && (series.length>1 || config.visualStyle?.legend?.visible===true);
@@ -1494,7 +1516,7 @@ function render() {{
   svg.innerHTML = '';
   legend.innerHTML = '';
   const width = Math.max(svg.clientWidth || 900, toNumber(visual.chart.minWidth, 360));
-  root.classList.toggle('has-event-marks', (Array.isArray(visual.overlays)?visual.overlays:[]).some(item=>item.labelBox||item.eventTitle||item.eventTime));
+  root.classList.toggle('has-event-marks', (Array.isArray(visual.overlays)?visual.overlays:[]).some(item=>(item.labelBox||item.eventTitle||item.eventTime)&&item.labelPlacement!=='outside-top'));
   const height = Math.max(svg.clientHeight || (toNumber(visual.chart.height, config.height) - 58), 160);
   svg.setAttribute('viewBox', `0 0 ${{width}} ${{height}}`);
   const isMobile = width < 680;
@@ -1744,10 +1766,12 @@ function render() {{
   }});
   eventLabelLayout.connectorLayer = svgEl('g', {{class:'event-label-connectors','pointer-events':'none'}});
   svg.appendChild(eventLabelLayout.connectorLayer);
-  if (!isMobile && pendingEventLabels.length) {{
-    const labelWidth=Math.max(...pendingEventLabels.map(args=>eventLabelNaturalWidth(args[3],args[5],args[6],args[7].right-args[7].left-24)));
-    const rowHeight=Math.max(...pendingEventLabels.map(args=>eventLabelNaturalHeight(args[3],args[5],args[6],labelWidth)));
-    pendingEventLabels.sort((a,b)=>a[1]-b[1]).forEach(args=>{{
+  const inlineEvents=pendingEventLabels.filter(args=>args[3].labelPlacement!=='outside-top');
+  drawOutsideTopEventLabels(pendingEventLabels.filter(args=>args[3].labelPlacement==='outside-top'),svg);
+  if (!isMobile && inlineEvents.length) {{
+    const labelWidth=Math.max(...inlineEvents.map(args=>eventLabelNaturalWidth(args[3],args[5],args[6],args[7].right-args[7].left-24)));
+    const rowHeight=Math.max(...inlineEvents.map(args=>eventLabelNaturalHeight(args[3],args[5],args[6],labelWidth)));
+    inlineEvents.sort((a,b)=>a[1]-b[1]).forEach(args=>{{
       args[3]={{...args[3],timelineWidth:labelWidth,timelineRowHeight:rowHeight}};
       drawEventLabel(...args);
     }});
@@ -1761,7 +1785,7 @@ function render() {{
     hit.addEventListener('mouseleave', hideTooltip);
     svg.appendChild(hit);
   }});
-  if (isMobile) drawMobileEventLabels(pendingEventLabels, svg);
+  if (isMobile) drawMobileEventLabels(inlineEvents, svg);
   drawSvgLegend(series, width, height, legendTopY);
 }}
 function tooltipBounds(anchorX, tooltipWidth, viewportLeft = 0, viewportRight = window.innerWidth, safeDistance = 0) {{

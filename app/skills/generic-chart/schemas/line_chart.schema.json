@@ -135,6 +135,7 @@
     "Tooltip boundary behavior must follow grouped-line behavior: clamp to both viewport edges, compute anchors from rendered SVG screen coordinates on small screens, align the arrow tip with the vertical position line, and hide the arrow when it would sit on the tooltip edge.",
     "For right-side y-axes, align the y-axis description to the same right edge as the y-axis tick labels, and allow the description text to extend leftward into the chart area instead of reserving extra right margin.",
     "For a framed two-line event annotation, use visualStyle.overlays[] with type='pointMarkers', x or index, labelBox=true, eventTime for the first line, and eventTitle for the second line. Preserve all base line-chart defaults unless the user explicitly requests a visual override.",
-    "For a verified trade/event date color boundary, use visualStyle.line.colorSplit with an exact x present in data. Bind event points with existing pointMarkers; never shift missing dates. Keep all base layout and line defaults."
+    "For a verified trade/event date color boundary, use visualStyle.line.colorSplit with an exact x present in data. Bind event points with existing pointMarkers; never shift missing dates. Keep all base layout and line defaults.",
+    "When mark cards must not cover curves, set pointMarkers.labelPlacement=outside-top. The renderer reserves a separate label lane above the SVG plot, wraps all labels on narrow widths and connects exact price points; original plot coordinates and styling remain unchanged."
   ]
 }
