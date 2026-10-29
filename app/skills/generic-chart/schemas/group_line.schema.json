@@ -2,25 +2,87 @@
   "chartType": "group-line",
   "script": "group_line.py",
   "purpose": "Compare multiple numeric series over the same ordered x-axis.",
-  "rawDataContract": {"shape": "array<object>", "notes": "Rows may be wide or tidy. Convert tidy rows to the payload style expected by the script if needed."},
+  "rawDataContract": {
+    "shape": "array<object>",
+    "notes": "Rows may be wide or tidy. Convert tidy rows to the payload style expected by the script if needed."
+  },
   "semanticChannels": [
-    {"channel": "x", "payloadField": "xField", "required": true, "acceptedTypes": ["date", "string", "number"], "semantics": "time, period, ordered category"},
-    {"channel": "line.y[]", "payloadField": "series[].field", "required": true, "acceptedTypes": ["number"], "semantics": "multiple comparable numeric measures or entities"},
-    {"channel": "series.label", "payloadField": "series[].label", "required": false, "acceptedTypes": ["string"], "semantics": "reader-facing series names"},
-    {"channel": "yAxis.name", "payloadField": "rightAxis.label", "required": false, "acceptedTypes": ["string"], "semantics": "reader-facing y-axis description or metric name, such as 累计收益率; ordinary grouped-line charts should use the right y-axis only"}
+    {
+      "channel": "x",
+      "payloadField": "xField",
+      "required": true,
+      "acceptedTypes": [
+        "date",
+        "string",
+        "number"
+      ],
+      "semantics": "time, period, ordered category"
+    },
+    {
+      "channel": "line.y[]",
+      "payloadField": "series[].field",
+      "required": true,
+      "acceptedTypes": [
+        "number"
+      ],
+      "semantics": "multiple comparable numeric measures or entities"
+    },
+    {
+      "channel": "series.label",
+      "payloadField": "series[].label",
+      "required": false,
+      "acceptedTypes": [
+        "string"
+      ],
+      "semantics": "reader-facing series names"
+    },
+    {
+      "channel": "yAxis.name",
+      "payloadField": "rightAxis.label",
+      "required": false,
+      "acceptedTypes": [
+        "string"
+      ],
+      "semantics": "reader-facing y-axis description or metric name, such as 累计收益率; ordinary grouped-line charts should use the right y-axis only"
+    }
   ],
   "payloadShape": {
     "type": "group-line",
     "title": "string",
     "xField": "string",
     "data": "array<object>",
-    "series": [{"field": "string", "label": "string", "axis": "right"}],
-    "leftAxis": {"visible": false},
-    "rightAxis": {"label": "string", "digits": "number", "min": "number", "max": "number", "includeZero": "boolean", "visible": true},
+    "series": [
+      {
+        "field": "string",
+        "label": "string",
+        "axis": "right"
+      }
+    ],
+    "leftAxis": {
+      "visible": false
+    },
+    "rightAxis": {
+      "label": "string",
+      "digits": "number",
+      "min": "number",
+      "max": "number",
+      "includeZero": "boolean",
+      "visible": true
+    },
     "visualStyle": {
-      "yAxis": {"position": "right"},
-      "tooltip": {"showUnit": false},
-      "positionLine": {"visible": true, "color": "string", "opacity": "number", "width": "number", "dasharray": "string"}
+      "yAxis": {
+        "position": "right"
+      },
+      "tooltip": {
+        "showUnit": false
+      },
+      "positionLine": {
+        "visible": true,
+        "color": "string",
+        "opacity": "number",
+        "width": "number",
+        "dasharray": "string"
+      }
     }
   },
   "modelInstructions": [
@@ -37,6 +99,12 @@
     "On small screens, compute tooltip anchor coordinates from the rendered SVG screen position, not only from unscaled SVG/viewBox coordinates.",
     "When the tooltip is clamped at the left or right viewport boundary and the arrow tip would sit on the tooltip edge, hide the arrow instead of showing a clipped or detached triangle.",
     "For right-side y-axes, align the y-axis description to the same right edge as the y-axis tick labels, and allow the description text to extend leftward into the chart area instead of reserving extra right margin.",
-    "For a framed two-line event annotation, use visualStyle.overlays[] with type='pointMarkers', x or index, labelBox=true, eventTime for the first line, and eventTitle for the second line. Preserve all base grouped-line defaults unless the user explicitly requests a visual override."
-  ]
+    "For a framed two-line event annotation, use visualStyle.overlays[] with type='pointMarkers', x or index, labelBox=true, eventTime for the first line, and eventTitle for the second line. Preserve all base grouped-line defaults unless the user explicitly requests a visual override.",
+    "For a verified trade/event date color boundary, use visualStyle.line.colorSplit with an exact x present in data. Bind event points with existing pointMarkers; never shift missing dates. Keep all base layout and line defaults."
+  ],
+  "styleContract": {
+    "visualStyle": {
+      "line": "Existing line defaults plus optional colorSplit: {x:exact existing x,field:series field,beforeColor,afterColor,beforeLabel,afterLabel}. Changes stroke colors and legend only; same coordinates/path. Missing x leaves ordinary line unchanged."
+    }
+  }
 }

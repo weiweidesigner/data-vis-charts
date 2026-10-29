@@ -72,7 +72,7 @@ def component_schema() -> dict[str, Any]:
                 "xAxis": "visible, color, fontSize, fontWeight, labelEvery, labelAngle, lineColor, lineWidth",
                 "yAxis": "position(left|right|both), suffix, digits, color, fontSize, fontWeight, lineColor, lineWidth",
                 "leftAxis/rightAxis": "min, max, label/description/title/name/axisLabel, suffix, digits, includeZero, visible",
-                "line": "showPoints, strokeWidth, curve(straight|smooth), dasharray, opacity, strokeLinecap, strokeLinejoin",
+                "line": "showPoints, strokeWidth, curve(straight|smooth), dasharray, opacity, strokeLinecap, strokeLinejoin, colorSplit{x,field,beforeColor,afterColor,beforeLabel,afterLabel}; exact existing x only, original path unchanged",
                 "point": "visible, radius, outerRadius, fill, strokeWidth",
                 "seriesStyle": "field/series/name/label, color, strokeWidth, opacity, dasharray, showPoints, pointRadius, axis",
                 "legend": "visible, position(top|bottom), align, gap, color, fontSize, markerSize, markerShape; legend labels show series names only and strip units/value suffixes",
@@ -1415,6 +1415,13 @@ function drawMobileEventLabels(events,svg) {{
   select(active);
 }}
 function drawSvgLegend(series, width, height, topY = null) {{
+  const split = visual.line.colorSplit;
+  if (isObject(split) && config.data.some(row=>String(row[config.xField])===String(split.x))) {{
+    series=series.flatMap(item=>(!split.field||split.field===item.field)?[
+      {{...item,label:split.beforeLabel||item.label,color:split.beforeColor||item.color}},
+      {{...item,label:split.afterLabel||item.label,color:split.afterColor||item.color}}
+    ]:[item]);
+  }}
   if (!shouldShowLineLegend(series)) {{
     legend.style.display = 'none';
     return;
@@ -1641,9 +1648,22 @@ function render() {{
     }});
     eventLabelLayout.points.push(...points.filter(Boolean));
     for(let i=1;i<points.length;i++) if(points[i-1]&&points[i]) eventLabelLayout.segments.push([points[i-1],points[i]]);
+    let lineColor=item.color;
+    const split=visual.line.colorSplit;
+    if(isObject(split)&&(!split.field||split.field===item.field)) {{
+      const splitIndex=rows.findIndex(row=>String(row[config.xField])===String(split.x));
+      if(splitIndex>=0&&points[splitIndex]) {{
+        const id='line-split-'+series.indexOf(item);
+        const defs=svgEl('defs',{{}}),gradient=svgEl('linearGradient',{{id,gradientUnits:'userSpaceOnUse',x1:margin.left,x2:margin.left+plotW,y1:0,y2:0}});
+        const offset=String(Math.max(0,Math.min(1,(centerX(splitIndex)-margin.left)/plotW)));
+        gradient.appendChild(svgEl('stop',{{offset,'stop-color':split.beforeColor||item.color}}));
+        gradient.appendChild(svgEl('stop',{{offset,'stop-color':split.afterColor||item.color}}));
+        defs.appendChild(gradient);svg.appendChild(defs);lineColor=`url(#${{id}})`;
+      }}
+    }}
     const path = svgEl('path', {{
       d: pathFromPoints(points, visual.line.curve),
-      stroke: item.color,
+      stroke: lineColor,
       class: 'line-path',
       'stroke-width': item.strokeWidth,
       'stroke-dasharray': item.dasharray,

@@ -125,3 +125,5 @@ tooltip 的纵向锚点必须来自绘图区首根网格线，而不是标题、
 
 
 饼图 `pie.py` 高度随标题、圆环和底部图例内容自适应，不预留固定最小高度或图例下留白。不展示右上角期间标记；旧 payload 的 badgeLabel/yearLabel/periodLabel 仅兼容读取，不渲染。需要说明期间时放在模型生成的标题或副标题。
+
+折线按事件分色可用 `visualStyle.line.colorSplit={x,field,beforeColor,afterColor,beforeLabel,afterLabel}`，x 必须精确匹配数据点，只改变原折线的颜色与图例，不拆分/补齐价格、不改基础样式；日期不存在时保留原线并由业务层说明。标记点继续用 pointMarkers。
