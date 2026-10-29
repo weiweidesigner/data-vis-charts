@@ -1340,11 +1340,11 @@ function drawEventLabel(parent,x,y,overlay,color,dateText,titleText,bounds) {{
   const center=Math.max(bounds.left+anchorWidth/2,Math.min(bounds.right-anchorWidth/2,x));
   const anchorX=Math.max(bounds.left,Math.min(bounds.right-width,center-width/2));
   const horizontal=[anchorX];
-  for(let x=bounds.left;x<=bounds.right-width;x+=Math.max(24,width/2))horizontal.push(x);
+  for(let x=bounds.left;x<=bounds.right-width;x+=12)horizontal.push(x);
   horizontal.push(bounds.right-width);
   const rowHeight=toNumber(overlay.timelineRowHeight,height);
   const candidates=[];
-  for(let by=bounds.top;by<=bounds.bottom-rowHeight;by+=rowHeight+8)candidates.push(by);
+  for(let by=bounds.top;by<=bounds.bottom-rowHeight;by+=4)candidates.push(by);
   if(!candidates.length)candidates.push(bounds.top);
   let best=null;
   for(const bx of horizontal)for(const candidate of candidates){{
