@@ -79,7 +79,7 @@ def component_schema() -> dict[str, Any]:
                 "tooltip": "visible, placement(cursor|fixed|topGrid|aboveFirstGrid), background, color, borderRadius, padding, fontSize, maxWidth, arrow, showUnit",
                 "hover": "bandColor, bandOpacity",
                 "positionLine": "visible, color, opacity, width, dasharray; vertical x-position guide shown on hover",
-                "overlays": "referenceLine, selectedBand, thresholdMarkers, pointMarkers; pointMarkers supports labelBox, eventTime, eventTitle, labelPosition(top|bottom), labelPlacement(outside-top reserves a separate lane above plot; all labels retained on mobile), labelBackground, borderColor, labelBorderRadius, connectorColor",
+                "overlays": "referenceLine, selectedBand, thresholdMarkers, pointMarkers; pointMarkers supports labelBox, eventTime, eventTitle, labelPosition(top|bottom), labelPlacement(outside-top reserves a separate lane above plot; all labels retained on mobile), allowCurveOverlap (default false; true permits curve overlap while protecting marked anchors and other cards), labelBackground, borderColor, labelBorderRadius, connectorColor",
                 "customCss": "raw CSS appended inside this component",
             }
         },
@@ -1353,8 +1353,8 @@ function drawEventLabel(parent,x,y,overlay,color,dateText,titleText,bounds) {{
     const r={{x:bx,y:by,w:width,h:height}},padded={{x:bx-4,y:by-4,w:width+8,h:height+8}};
     let score=Math.abs(bx+width/2-x)*.06+Math.abs(by+height/2-y)*.03+(below===preferBelow?0:2);
     for(const old of eventLabelLayout.boxes){{const area=Math.max(0,Math.min(bx+width+4,old.x+old.w)-Math.max(bx-4,old.x))*Math.max(0,Math.min(by+height+4,old.y+old.h)-Math.max(by-4,old.y));if(area)score+=100000000+area;}}
-    for(const point of eventLabelLayout.points)if(point[0]>=padded.x&&point[0]<=padded.x+padded.w&&point[1]>=padded.y&&point[1]<=padded.y+padded.h)score+=100000;
-    for(const [a,b] of eventLabelLayout.segments)if(segmentHitsBox(a,b,padded))score+=10000;
+    for(const point of (overlay.allowCurveOverlap?eventLabelLayout.anchorPoints||[]:eventLabelLayout.points))if(point[0]>=padded.x&&point[0]<=padded.x+padded.w&&point[1]>=padded.y&&point[1]<=padded.y+padded.h)score+=100000;
+    if(!overlay.allowCurveOverlap)for(const [a,b] of eventLabelLayout.segments)if(segmentHitsBox(a,b,padded))score+=10000;
     if(!best||score<best.score)best={{...r,score}};
   }}
   if(overlay.outsideBox)best={{x:overlay.outsideBox.x,y:overlay.outsideBox.y,w:width,h:height}};
@@ -1769,6 +1769,7 @@ function render() {{
   }});
   eventLabelLayout.connectorLayer = svgEl('g', {{class:'event-label-connectors','pointer-events':'none'}});
   svg.appendChild(eventLabelLayout.connectorLayer);
+  eventLabelLayout.anchorPoints=pendingEventLabels.map(args=>[args[1],args[2]]);
   const inlineEvents=pendingEventLabels.filter(args=>args[3].labelPlacement!=='outside-top');
   drawOutsideTopEventLabels(pendingEventLabels.filter(args=>args[3].labelPlacement==='outside-top'),svg);
   if (!isMobile && inlineEvents.length) {{

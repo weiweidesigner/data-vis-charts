@@ -124,6 +124,7 @@
     }
   },
   "modelInstructions": [
+    "pointMarkers.allowCurveOverlap defaults false. When true, permit cards to overlap ordinary curves while protecting marked anchors, card spacing and plot bounds; keep normal card typography/padding.",
     "Use only when the x dimension has meaningful order.",
     "Sort x chronologically before rendering.",
     "Provide exactly one numeric series. Prefer series[0].field plus series[0].label so legend and tooltip display a reader-facing name.",

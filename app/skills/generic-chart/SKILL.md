@@ -129,3 +129,5 @@ tooltip 的纵向锚点必须来自绘图区首根网格线，而不是标题、
 折线按事件分色可用 `visualStyle.line.colorSplit={x,field,beforeColor,afterColor,beforeLabel,afterLabel}`，x 必须精确匹配数据点，只改变原折线的颜色与图例，不拆分/补齐价格、不改基础样式；日期不存在时保留原线并由业务层说明。标记点继续用 pointMarkers。
 
 不允许 Mark 卡片遮挡折线时，pointMarkers 使用 `labelPlacement: "outside-top"`。标签在绘图区上方独立区域排列，连接精确数据点，窄屏全部保留并换行；不改变绘图区曲线、坐标、网格或基本样式。
+
+当用户允许标记卡片适度遮挡曲线时，pointMarkers可设置 `allowCurveOverlap: true`；保留正常卡片字号、上下内边距和行距，仍避免覆盖其他卡片与标记锚点。默认false，维持原避让行为。
