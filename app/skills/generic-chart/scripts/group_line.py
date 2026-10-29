@@ -1980,7 +1980,9 @@ function postChartHeight() {{
   const contentHeight = Math.ceil(Math.max(root.scrollHeight || 0, root.offsetHeight || 0, rootBottom - rootRect.top));
   const minHeight = Math.max(240, stageHeight + 56);
   const localTooltipBottom = tooltip.classList.contains('active') ? tooltip.getBoundingClientRect().bottom - rootRect.top + 12 : 0;
-  const height = Math.ceil(Math.max(minHeight, contentHeight, localTooltipBottom) + 2);
+  // SVG text may extend beyond its CSS box; include visible tick/legend/mark bounds.
+  const svgBottom=Math.max(svg.getBoundingClientRect().bottom,...[...svg.querySelectorAll('text,.event-label-box')].map(el=>el.getBoundingClientRect().bottom));
+  const height = Math.ceil(Math.max(minHeight, contentHeight, localTooltipBottom, svgBottom-rootRect.top) + 2);
   try {{
     if (window.frameElement) {{
       window.frameElement.style.height = `${{height}}px`;

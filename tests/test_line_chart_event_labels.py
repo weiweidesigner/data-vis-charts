@@ -103,3 +103,17 @@ def test_outside_top_marks_never_cover_plot_or_each_other_on_mobile():
                 for b in rects[i+1:]:assert a['x']+a['w']<=b['x'] or b['x']+b['w']<=a['x'] or a['y']+a['h']<=b['y'] or b['y']+b['h']<=a['y']
             assert not page.evaluate('document.documentElement.scrollWidth>innerWidth')
         browser.close()
+
+
+def test_embedded_line_keeps_svg_legend_and_axis_text_inside_frame():
+    import html,importlib.util
+    from playwright.sync_api import sync_playwright
+    spec=importlib.util.spec_from_file_location('height_test',ROOT/'app/skills/generic-chart/scripts/group_line.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+    data=[{'date':f'2026-01-{i+1:02d}','close':100+i%3} for i in range(9)]
+    payload={'type':'group-line','title':'Price','xField':'date','data':data,'series':[{'field':'close','label':'Close','axis':'right'}],'leftAxis':{'visible':False},'rightAxis':{'visible':True,'label':'Close'},'visualStyle':{'title':{'visible':False},'line':{'colorSplit':{'x':data[2]['date'],'beforeLabel':'Before','afterLabel':'After','beforeColor':'#9ca9cc','afterColor':'#ff402b'}}}}
+    with sync_playwright() as p:
+        browser=p.chromium.launch();page=browser.new_page()
+        for width in (623,320):
+            page.goto('about:blank');page.set_content('<iframe style="border:0;width:'+str(width)+'px;height:400px" srcdoc="'+html.escape(m.render_document(payload),quote=True)+'"></iframe>')
+            frame=page.frames[1];frame.wait_for_selector('.svg-legend');frame.wait_for_function('[...document.querySelectorAll("svg text")].every(e=>e.getBoundingClientRect().bottom<=innerHeight)')
+        browser.close()
