@@ -33,12 +33,6 @@ VISUAL_CHANNEL_MAPPINGS = [
         "default": 28,
     },
     {
-        "semantic": "右上角标记",
-        "field": "badgeLabel",
-        "aliases": ["yearLabel", "periodLabel"],
-        "visualChannel": "badge.topRight",
-    },
-    {
         "semantic": "下标题",
         "field": "subtitle",
         "aliases": ["subTitle", "caption"],
@@ -64,7 +58,6 @@ DATA_CONTRACT = [
     {"field": "items[].value", "type": "number", "channel": "pie.arc.angle"},
     {"field": "items[].displayValue", "type": "string", "channel": "legend.value"},
     {"field": "items[].color", "type": "string", "channel": "pie.arc.color"},
-    {"field": "badgeLabel", "type": "string", "channel": "badge.topRight"},
     {"field": "title", "type": "string", "channel": "text.title"},
     {"field": "subtitle", "type": "string", "channel": "text.subtitle"},
     {"field": "showLegendValues", "type": "boolean", "channel": "legend.valueVisibility"},
@@ -178,7 +171,6 @@ def render_document(payload: dict[str, Any]) -> str:
     config = _normalize_component(_extract_component(payload))
     config_json = json.dumps(config, ensure_ascii=False).replace("</", "<\\/")
     contract = html.escape(json.dumps(component_schema(), ensure_ascii=False), quote=True)
-    preferred_height = max(360, min(int(config["height"]), 480))
     light = ['#4d63f6','#00b899','#ff2f57','#d97706','#8e4ec6','#0090ff','#ab4aba','#46a758']
     dark = ['#8294ff','#34d3ad','#ff7188','#f6ad55','#d19dff','#70b8ff','#e796f3','#7ce2bd']
     series_css = ':root{' + ''.join(f'--sv-chart-series-{i+1}:{color};' for i,color in enumerate(light)) + '}:root[data-theme="dark"]{' + ''.join(f'--sv-chart-series-{i+1}:{color};' for i,color in enumerate(dark)) + '}'
@@ -196,8 +188,8 @@ def render_document(payload: dict[str, Any]) -> str:
 *{{box-sizing:border-box}}
 html,body{{width:100%;min-height:0;margin:0;background:transparent}}
 body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0;color:var(--business-text-151922);overflow:hidden}}
-.pie-component{{position:relative;width:100%;min-height:{preferred_height}px;padding:0 1px 0 0;background:transparent;overflow:hidden;container-type:inline-size}}
-.pie-header{{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:12px;width:100%;margin:0 0 10px}}
+.pie-component{{position:relative;width:100%;min-height:0;padding:0 1px 0 0;background:transparent;overflow:hidden;container-type:inline-size}}
+.pie-header{{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;column-gap:12px;width:100%;margin:0 0 10px}}
 .pie-heading{{min-width:0}}
 .pie-title{{margin:0;padding:0;color:var(--business-text-151922);font-size:20px;font-weight:700;line-height:1.35;letter-spacing:-.15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
 .pie-title:empty{{display:none}}
@@ -255,7 +247,6 @@ svg{{display:block;width:100%;height:100%;overflow:visible}}
       <h2 class="pie-title">{html.escape(config["title"])}</h2>
       <div class="pie-subtitle">{html.escape(config["subtitle"])}</div>
     </div>
-    <div class="pie-badge">{html.escape(config["badgeLabel"])}</div>
   </div>
   <div class="pie-layout">
     <div class="pie-stage"><svg role="img" aria-label="pie"></svg><div class="pie-tooltip"></div></div>

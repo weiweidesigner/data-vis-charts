@@ -122,3 +122,6 @@ tooltip 的纵向锚点必须来自绘图区首根网格线，而不是标题、
 如果组件运行在跨域 iframe、`file://` opaque origin iframe，或任何浏览器禁止访问父页面 DOM 的环境中，iframe 内脚本无法把 DOM 绘制到 iframe 外部；此时仅靠组件脚本无法突破宿主裁剪，只能退回 iframe 内部 tooltip，或由宿主页面提供 postMessage portal bridge，或改用非 iframe/同源方式嵌入。
 
 分组柱状图的 `gridCount` 表示横线总数，0 轴计入其中且不重复绘制；默认共 5 根。跨零时将零轴作为等间距刻度之一；微小异号值仅保留数据空间，不再额外增加紧邻零轴的刻度线。
+
+
+饼图 `pie.py` 高度随标题、圆环和底部图例内容自适应，不预留固定最小高度或图例下留白。不展示右上角期间标记；旧 payload 的 badgeLabel/yearLabel/periodLabel 仅兼容读取，不渲染。需要说明期间时放在模型生成的标题或副标题。
