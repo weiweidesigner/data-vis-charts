@@ -66,7 +66,7 @@ def component_schema() -> dict[str, Any]:
             "visualStyle": {
                 "container": "background, color, padding, borderRadius, fontFamily, className",
                 "title": "visible, text, color, fontSize, fontWeight, lineHeight, margin",
-                "chart": "background, minWidth, height",
+                "chart": "background, minWidth, height, fitContent (boolean; fit iframe to actual chart/axis/legend bounds without extra footer reserve)",
                 "margin": "top, right, bottom, left",
                 "grid": "visible, count, color, width, dasharray, opacity",
                 "xAxis": "visible, color, fontSize, fontWeight, labelEvery, labelAngle, lineColor, lineWidth",
@@ -1986,7 +1986,7 @@ function postChartHeight() {{
   const legendRect = legend.getBoundingClientRect();
   const rootBottom = Math.max(root.getBoundingClientRect().bottom || 0, legendRect.bottom || 0);
   const contentHeight = Math.ceil(Math.max(root.scrollHeight || 0, root.offsetHeight || 0, rootBottom - rootRect.top));
-  const minHeight = Math.max(240, stageHeight + 56);
+  const minHeight = visual.chart.fitContent === true ? stageHeight : Math.max(240, stageHeight + 56);
   const localTooltipBottom = tooltip.classList.contains('active') ? tooltip.getBoundingClientRect().bottom - rootRect.top + 12 : 0;
   // SVG text may extend beyond its CSS box; include visible tick/legend/mark bounds.
   const svgBottom=Math.max(svg.getBoundingClientRect().bottom,...[...svg.querySelectorAll('text,.event-label-box')].map(el=>el.getBoundingClientRect().bottom));

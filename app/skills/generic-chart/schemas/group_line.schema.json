@@ -86,6 +86,7 @@
     }
   },
   "modelInstructions": [
+    "visualStyle.chart.fitContent=true sizes an embedded chart frame from actual root, SVG text/legend and tooltip bounds without the default footer-height reserve; content must stay fully visible.",
     "pointMarkers.allowCurveOverlap defaults false. When true, prefer vertical gaps and minimize covered curve length; allow limited overlap only when needed, while protecting marked anchors, card spacing and plot bounds; keep normal card typography/padding.",
     "Use no more than 6-8 visible series unless the user explicitly asks.",
     "For ordinary grouped-line examples, bind every series to axis='right', set leftAxis.visible=false, set rightAxis.visible=true, and set visualStyle.yAxis.position='right'.",

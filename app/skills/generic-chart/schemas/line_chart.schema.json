@@ -124,6 +124,7 @@
     }
   },
   "modelInstructions": [
+    "visualStyle.chart.fitContent=true sizes an embedded chart frame from actual root, SVG text/legend and tooltip bounds without the default footer-height reserve; content must stay fully visible.",
     "pointMarkers.allowCurveOverlap defaults false. When true, prefer vertical gaps and minimize covered curve length; allow limited overlap only when needed, while protecting marked anchors, card spacing and plot bounds; keep normal card typography/padding.",
     "Use only when the x dimension has meaningful order.",
     "Sort x chronologically before rendering.",
