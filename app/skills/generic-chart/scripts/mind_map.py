@@ -260,6 +260,8 @@ svg.markmap .node circle{{fill:var(--mm-node-bg);stroke-width:2.5px}}
 
 html:fullscreen,html:-webkit-full-screen,body.is-fullscreen{{width:100vw;height:100vh;background:var(--mm-fullscreen-bg);overflow:hidden}}
 body.is-fullscreen #mindMapZoom{{display:flex}}
+body.is-fullscreen svg.markmap{{touch-action:none;overscroll-behavior:none;cursor:grab}}
+body.is-fullscreen svg.markmap:active{{cursor:grabbing}}
 #fullscreenBtn:hover,#exitFullscreenBtn:hover{{border-color:var(--mm-muted)}}
 #fullscreenBtn:focus-visible,#exitFullscreenBtn:focus-visible{{outline:2px solid var(--mm-muted);outline-offset:2px}}
 body.is-fullscreen #container{{position:fixed;inset:0;width:100vw;height:100vh;min-height:0;border-radius:0;z-index:9999}}
@@ -273,7 +275,7 @@ body.is-fullscreen.is-forced-landscape #container{{width:100vh;height:100vw;left
 </style>
 </head>
 <body class="{body_class}">
-<div id="container" data-mind-map-container="true" data-mind-map-version="4">
+<div id="container" data-mind-map-container="true" data-mind-map-version="5">
   <button id="fullscreenBtn" type="button" aria-label="全屏浏览" title="全屏浏览">
     {control_icon('maximize')}
   </button>
@@ -305,6 +307,20 @@ function zoomMindMap(factor, clientX, clientY){{
   mindMapInteracted=true;
   applyMindMapTransform(svg,group,cx-(cx-matrix.e)*ratio,cy-(cy-matrix.f)*ratio,scale);
 }}
+function panFullscreenMindMap(dx,dy){{
+  if(!document.body.classList.contains('is-fullscreen'))return;
+  const svg=document.querySelector('svg.markmap'),group=svg?.querySelector('g');
+  const matrix=group?.transform.baseVal.consolidate()?.matrix,screenMatrix=svg?.getScreenCTM();
+  if(!matrix||!screenMatrix)return;
+  const inverse=screenMatrix.inverse(),origin=svg.createSVGPoint(),delta=svg.createSVGPoint();
+  delta.x=dx;delta.y=dy;
+  const a=origin.matrixTransform(inverse),b=delta.matrixTransform(inverse);
+  mindMapInteracted=true;
+  applyMindMapTransform(svg,group,matrix.e+b.x-a.x,matrix.f+b.y-a.y,matrix.a);
+}}
+container.addEventListener('pointermove',event=>{{
+  if(document.body.classList.contains('is-fullscreen')&&event.pointerType==='mouse'&&event.buttons===1&&event.target.closest?.('svg.markmap'))mindMapInteracted=true;
+}},{{passive:true}});
 document.querySelectorAll("[data-map-zoom]").forEach(button=>button.addEventListener("click",()=>{{
   if(button.dataset.mapZoom==="fit"){{mindMapInteracted=false;refitMindMap();}}
   else zoomMindMap(button.dataset.mapZoom==="in"?1.25:.8);
@@ -313,6 +329,13 @@ container.addEventListener("wheel",event=>{{
   if(!event.target.closest?.("svg.markmap"))return;
   event.stopImmediatePropagation();
   if(event.ctrlKey||event.metaKey){{event.preventDefault();zoomMindMap(Math.exp(-event.deltaY*.01),event.clientX,event.clientY);}}
+  else if(document.body.classList.contains('is-fullscreen')){{
+    event.preventDefault();
+    const unit=event.deltaMode===1?16:event.deltaMode===2?container.clientHeight:1;
+    const dx=event.shiftKey&&!event.deltaX?event.deltaY:event.deltaX;
+    const dy=event.shiftKey&&!event.deltaX?0:event.deltaY;
+    panFullscreenMindMap(-dx*unit,-dy*unit);
+  }}
 }},{{capture:true,passive:false}});
 let heldTouch=null,holdTimer=null;
 const releaseHeldTouch=()=>{{clearTimeout(holdTimer);heldTouch=null;}};
@@ -332,8 +355,11 @@ container.addEventListener('touchmove',event=>{{
   const svg=document.querySelector('svg.markmap'),group=svg?.querySelector('g'),matrix=group?.transform.baseVal.consolidate()?.matrix;
   if(!matrix)return;
   event.preventDefault();mindMapInteracted=true;
-  const rect=svg.getBoundingClientRect(),box=svg.viewBox.baseVal;
-  applyMindMapTransform(svg,group,matrix.e+dx*(box.width?box.width/rect.width:1),matrix.f+dy*(box.height?box.height/rect.height:1),matrix.a);
+  if(document.body.classList.contains('is-fullscreen'))panFullscreenMindMap(dx,dy);
+  else{{
+    const rect=svg.getBoundingClientRect(),box=svg.viewBox.baseVal;
+    applyMindMapTransform(svg,group,matrix.e+dx*(box.width?box.width/rect.width:1),matrix.f+dy*(box.height?box.height/rect.height:1),matrix.a);
+  }}
   heldTouch.x=t.clientX;heldTouch.y=t.clientY;
 }},{{capture:true,passive:false}});
 container.addEventListener('touchend',releaseHeldTouch);
@@ -369,13 +395,15 @@ function sendMindMapHeight(){{
 function refitMindMap(){{
   updateFullscreenLayout();
   forceMindMapTextStyle();
+  if(document.body.classList.contains('is-fullscreen')&&mindMapInteracted)return;
   const svg = document.querySelector("svg.markmap");
   if (svg && svg.__markmap && typeof svg.__markmap.fit === "function") {{
     try {{ svg.__markmap.fit(); }} catch (e) {{}}
   }}
   if (document.body.classList.contains("is-fullscreen")) {{
-    requestAnimationFrame(fillMindMapFullscreen);
-    setTimeout(fillMindMapFullscreen, 80);
+    const fit=()=>{{if(!mindMapInteracted)fillMindMapFullscreen();}};
+    requestAnimationFrame(fit);
+    setTimeout(fit, 80);
   }} else {{
     requestAnimationFrame(fitMindMapBelowTitle);
     setTimeout(fitMindMapBelowTitle, 80);
@@ -443,6 +471,7 @@ function unlockOrientation(){{
   }} catch (e) {{}}
 }}
 async function enterFullscreen(){{
+  mindMapInteracted=false;
   document.body.classList.add("is-fullscreen");
   updateFullscreenLayout();
   const fullscreenTarget = document.documentElement || document.body;

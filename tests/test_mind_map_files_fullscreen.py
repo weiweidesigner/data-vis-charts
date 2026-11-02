@@ -66,3 +66,36 @@ def test_fullscreen_button_visible_in_embed_and_exit_restores_canvas():
                 assert abs(child.locator('#container').bounding_box()['height']-before)<2
                 page.close()
         finally:browser.close()
+
+
+def test_pan_wheel_and_touch_only_in_fullscreen_with_rotation_and_no_snapback():
+    html=m.build_html({'data':{'content':'# Topic\n## Group\n- Value'},'theme':'dark'})
+    loader="document.getElementById('mm').innerHTML='<svg class=\"markmap\" width=\"100%\" height=\"100%\"><g><rect width=\"500\" height=\"250\"/></g></svg>';"
+    with sync_playwright() as pw:
+        browser=pw.chromium.launch()
+        try:
+            for width in (1100,390):
+                page=browser.new_page(viewport={'width':width,'height':800})
+                page.route('**/*markmap-autoloader*',lambda r:r.fulfill(body=loader,content_type='application/javascript'))
+                page.set_content(html);page.wait_for_selector('svg.markmap')
+                position="()=>{const m=document.querySelector('svg.markmap g').getScreenCTM();return [m.e,m.f,m.a,m.b]}"
+                wheel="args=>{const e=new WheelEvent('wheel',{deltaX:args[0],deltaY:args[1],shiftKey:!!args[2],bubbles:true,cancelable:true});document.querySelector('svg.markmap').dispatchEvent(e);return e.defaultPrevented}"
+                before=page.evaluate(position)
+                assert page.evaluate(wheel,[40,60]) is False
+                assert page.evaluate(position)==before
+                page.locator('#fullscreenBtn').click();page.wait_for_function('document.fullscreenElement !== null');page.wait_for_timeout(400)
+                for dx,dy in [(40,60),(-25,-30)]:
+                    before=page.evaluate(position);assert page.evaluate(wheel,[dx,dy]) is True;after=page.evaluate(position)
+                    assert after[0]-before[0]==pytest.approx(-dx,abs=.1)
+                    assert after[1]-before[1]==pytest.approx(-dy,abs=.1)
+                before=page.evaluate(position);page.evaluate(wheel,[0,30,True]);after=page.evaluate(position)
+                assert after[0]-before[0]==pytest.approx(-30,abs=.1) and after[1]==pytest.approx(before[1],abs=.1)
+                before=page.evaluate(position)
+                page.evaluate("""()=>{const svg=document.querySelector('svg.markmap');const fire=(name,x,y)=>svg.dispatchEvent(new TouchEvent(name,{touches:[new Touch({identifier:1,target:svg,clientX:x,clientY:y})],bubbles:true,cancelable:true}));fire('touchstart',100,100);fire('touchmove',145,155);svg.dispatchEvent(new TouchEvent('touchend',{touches:[],bubbles:true}));}""")
+                after=page.evaluate(position)
+                assert after[0]-before[0]==pytest.approx(45,abs=.1) and after[1]-before[1]==pytest.approx(55,abs=.1)
+                page.wait_for_timeout(1100);assert page.evaluate(position)==after
+                page.locator('#exitFullscreenBtn').click();page.wait_for_function('document.fullscreenElement === null');page.wait_for_timeout(800)
+                before=page.evaluate(position);assert page.evaluate(wheel,[50,70]) is False;assert page.evaluate(position)==before
+                page.close()
+        finally:browser.close()
