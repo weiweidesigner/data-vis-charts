@@ -1,0 +1,83 @@
+{
+  "chartType": "data-table",
+  "script": "data_table.py",
+  "purpose": "Display complete structured records in a scrollable, fullscreen-capable table without model transcription or Markdown truncation.",
+  "semanticChannels": [
+    {
+      "channel": "rows",
+      "payloadField": "dataSource.path + recordsPath OR rows",
+      "required": true,
+      "acceptedTypes": [
+        "array<object>"
+      ],
+      "semantics": "all input records; no implicit sample/filter"
+    },
+    {
+      "channel": "columns",
+      "payloadField": "columns[].field",
+      "required": true,
+      "acceptedTypes": [
+        "string",
+        "array<string>"
+      ],
+      "semantics": "exact source field path, including nested objects"
+    }
+  ],
+  "payloadShape": {
+    "title": "optional table title; do not repeat in surrounding Markdown",
+    "dataSource": {
+      "path": "outputs/data/source.json",
+      "recordsPath": [
+        "events"
+      ]
+    },
+    "rows": "optional inline array of records, mutually exclusive with dataSource",
+    "columns": [
+      {
+        "field": "name",
+        "label": "名称",
+        "type": "text",
+        "width": 200
+      },
+      {
+        "field": "estimateEps",
+        "label": "预期EPS",
+        "type": "number",
+        "digits": 2,
+        "suffix": " USD",
+        "width": 140
+      }
+    ],
+    "height": "scroll window max height in px, default 360, range 180..1000",
+    "locale": "optional BCP47 locale, default inferred zh-CN/en-US from headers/title",
+    "theme": "light|dark, default light"
+  },
+  "fileInputs": {
+    "payload": "--payload reads a small JSON config; dataSource reads the source JSON directly. Relative source paths resolve from invocation cwd. No HTTP or model-generated transcription.",
+    "recordsPath": "array of exact keys selecting records; [] selects a root array",
+    "field": "dot-separated field path, or an array of exact keys when a key contains a dot",
+    "sourceCoverage": "All records and selected columns are embedded in the standalone HTML. Browser row virtualization does not remove source records. No hard row cap, default sample, pagination loss or silent filtering. Upstream partial API coverage remains partial; renderer completeness only applies to its input.",
+    "provenance": "receipt.fileSource includes SHA-256, selected record count, recordsPath and projected field paths; saved normalized payload includes the same source metadata"
+  },
+  "columnContract": {
+    "type": "text|number|percent|date. Text is left aligned, numeric/percent right aligned; optional align left|right|center overrides.",
+    "number": "Display formatting only: digits optionally 0..12, default max 6 fractional digits; prefix/suffix optional. Numeric strings format only if finite; other values retain text, never become zero.",
+    "percent": "Values are already percentage numbers (4.2 becomes 4.2%), never implicitly multiply by 100. Convert source fractions explicitly upstream when required.",
+    "date": "Formats YYYYMMDD as YYYY-MM-DD and replaces ISO T separator with a space. No timezone conversion or inferred source timezone.",
+    "missing": "null renders —; zero and false remain actual values; absent mapped fields fail with row/path details rather than silently discard data.",
+    "longValues": "Cells have a compact single-line display; click a cell to read its full untruncated value, including on touch devices. Row records are never truncated."
+  },
+  "modelInstructions": [
+    "Use dataSource with already-fetched JSON for complete lists, detail tables, many rows, or a user request for all records. The model supplies only the path, recordsPath and column mappings; do not copy a large dataset into CLI/Markdown.",
+    "This is a generic table renderer, not a data provider. Fetch trustworthy data first. Use an existing transformation tool for derived metrics, explicit filtering or aggregation.",
+    "Choose columns and formats from actual source fields, values and units. Keep percentages and currencies faithful. Do not invent rows or fill missing values with zero.",
+    "The component renders the table, sticky header, local sorting and all rows through its own scroll window; do not repeat the same table as Markdown or create custom HTML for these supported features.",
+    "Fullscreen is available in the upper-right toolbar. Normal mode scrolls only within the bounded window; fullscreen expands the table without refetching. Local sorting and cell-detail view do not change the source.",
+    "A large table can expose every input record but cannot create data the upstream API did not fetch. Preserve upstream pagination/coverage limitations in the answer."
+  ],
+  "agentContract": {
+    "input": "Read the full schema at schemaPath. Pass a small --payload JSON with dataSource.path/recordsPath and columns[].field/label/type; local JSON is read directly. Or use rows for small inline records.",
+    "output": "Complete source records, bounded scrolling, sticky headers, fullscreen, sorting all records, full cell detail. Do not repeat the same data as a Markdown table.",
+    "coverage": "Renderer completeness covers its input file only; it does not fetch missing upstream pages. Source SHA-256 and selected row count are returned."
+  }
+}

@@ -1,6 +1,6 @@
 ---
 name: "通用图表"
-description: 通用图表渲染技能，适用于用户提供的 JSON、CSV-like 数据或上游 payload。用于生成标准或 Aime 风格图表，包括柱状图、折线图、分组折线图、分组柱状图、柱折图、饼图、矩形图、动态折线、动态柱状、动态气泡、脑图、流程图、旅程图和时间线。
+description: 通用图表渲染技能，适用于用户提供的 JSON、CSV-like 数据或上游 payload。用于生成标准或 Aime 风格图表，包括柱状图、折线图、分组折线图、分组柱状图、柱折图、饼图、矩形图、动态折线、动态柱状、动态气泡、脑图、流程图、旅程图、时间线和支持文件交接及全屏的完整数据表格。
 ---
 
 # Generic Chart
@@ -153,3 +153,7 @@ For user-requested hatched placeholders, `grouped_bar.py` natively accepts `barP
 ## Mind maps from files
 
 `mind_map.py --content-file outputs/data/map.md` renders an authored UTF-8 Markdown file directly. For a large structured dataset, use a small `--payload` with `dataSource` instead: read the mind_map schema for recordsPath, groupBy and labelFields, or treePath for a `{name, children}` tree. The renderer deterministically includes every mapped row, escapes source labels and records source SHA-256/count; the model chooses mappings without transcribing the full dataset. This creates a source-backed map, not an automatic analytical summary. Use an existing transformation skill for computed/grouped metrics. Generated HTML embeds the resolved content and requires no source-file fetch when opened. The canvas supports top-right fullscreen on desktop and mobile.
+
+## Full-data tables
+
+`data_table.py` renders a generic complete-record table with a bounded scrolling viewport and a native fullscreen button. Read `schemas/data_table.schema.json` before generating its payload. Pass `dataSource: {path, recordsPath}` and explicit `columns` mappings to read a local JSON file directly, or provide `rows` inline for small inputs. It needs no axes or chart series. All input records and selected values are embedded in the standalone HTML; virtual scrolling limits DOM rows, never the dataset. The receipt reports source SHA-256 and record count. This proves coverage of the input, not upstream API pagination completeness. Choose meaningful localized column labels and preserve nulls as missing; do not fabricate values. Do not repeat the same records in a Markdown table. Text is left aligned, numbers right aligned, headers sticky; sorting applies to all records and cells open their full raw value. Use existing data/transformation tools for source retrieval, aggregation or analysis. Supports --payload, --data-json, --title, --theme light|dark, --output, --payload-output and --schema.
