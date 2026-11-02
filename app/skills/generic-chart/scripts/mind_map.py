@@ -12,6 +12,22 @@ from pathlib import Path
 from typing import Any
 
 
+# Lucide Icons (ISC): small inline SVG subset keeps standalone controls offline.
+CONTROL_ICONS = {
+    'minus': '<path d="M5 12h14"/>',
+    'plus': '<path d="M12 5v14"/><path d="M5 12h14"/>',
+    'scan': '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>',
+    'maximize': '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
+    'minimize': '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>',
+}
+
+
+def control_icon(name: str) -> str:
+    return ('<svg class="lucide lucide-' + name + '" viewBox="0 0 24 24" width="16" height="16" '
+            'fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" '
+            'aria-hidden="true" focusable="false">' + CONTROL_ICONS[name] + '</svg>')
+
+
 def unwrap_chart_payload(payload: dict[str, Any]) -> dict[str, Any]:
     chart_payload = payload.get("chartPayload")
     if not isinstance(chart_payload, dict):
@@ -217,6 +233,7 @@ def build_html(payload: dict[str, Any], theme: str | None = None) -> str:
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8" />
+<!-- {(Path(__file__).resolve().parents[1] / "runtime/lucide-LICENSE.txt").read_text(encoding="utf-8")} -->
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>{safe_title}</title>
 <style>
@@ -227,8 +244,8 @@ html,body{{margin:0;padding:0;width:100%;height:auto;min-height:0;background:var
 #fullscreenBtn,#exitFullscreenBtn{{position:absolute;z-index:20;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid var(--mm-border);border-radius:6px;background:var(--mm-button-bg);color:var(--mm-text);box-shadow:var(--mm-shadow);cursor:pointer;-webkit-tap-highlight-color:transparent}}
 #fullscreenBtn{{right:14px;top:18px}}
 #exitFullscreenBtn{{right:18px;top:max(14px,env(safe-area-inset-top));display:none}}
-#fullscreenBtn svg,#exitFullscreenBtn svg{{display:block;width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}}
-#mindMapZoom{{position:absolute;z-index:30;right:12px;bottom:12px;display:none;gap:4px;padding:4px;border:1px solid var(--mm-border);border-radius:10px;background:var(--mm-button-bg)}}#mindMapZoom button{{width:30px;height:30px;border:0;border-radius:6px;background:transparent;color:var(--mm-text);font:600 18px/1 sans-serif;cursor:pointer}}#mindMapZoom button:focus-visible{{outline:2px solid var(--mm-muted);outline-offset:1px}}
+#fullscreenBtn svg,#exitFullscreenBtn svg{{display:block;width:16px;height:16px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}}
+#mindMapZoom{{position:absolute;z-index:30;right:12px;bottom:12px;display:none;gap:4px;padding:4px;border:1px solid var(--mm-border);border-radius:10px;background:var(--mm-button-bg)}}#mindMapZoom button{{width:30px;height:30px;border:0;border-radius:6px;background:transparent;color:var(--mm-text);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}}#mindMapZoom button svg{{display:block;width:16px;height:16px;stroke-width:1.7}}#mindMapZoom button:hover{{background:var(--mm-border)}}#mindMapZoom button:focus-visible{{outline:2px solid var(--mm-muted);outline-offset:1px}}
 pre.markmap{{position:absolute;inset:0;margin:0;padding:0;background:transparent;white-space:pre}}
 svg.markmap{{width:100%!important;height:100%!important;touch-action:auto!important}}
 svg.markmap text{{fill:var(--mm-text)!important;opacity:1!important;font-weight:600}}
@@ -256,14 +273,14 @@ body.is-fullscreen.is-forced-landscape #container{{width:100vh;height:100vw;left
 </style>
 </head>
 <body class="{body_class}">
-<div id="container" data-mind-map-container="true" data-mind-map-version="3">
+<div id="container" data-mind-map-container="true" data-mind-map-version="4">
   <button id="fullscreenBtn" type="button" aria-label="全屏浏览" title="全屏浏览">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5"></path><path d="M16 3h5v5"></path><path d="M21 16v5h-5"></path><path d="M3 16v5h5"></path></svg>
+    {control_icon('maximize')}
   </button>
   <button id="exitFullscreenBtn" type="button" aria-label="退出全屏" title="退出全屏">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v6H3"></path><path d="M15 3v6h6"></path><path d="M21 15h-6v6"></path><path d="M3 15h6v6"></path></svg>
+    {control_icon('minimize')}
   </button>
-<div id="mindMapZoom" role="group" aria-label="画布缩放"><button type="button" data-map-zoom="out" aria-label="缩小画布" title="缩小">−</button><button type="button" data-map-zoom="fit" aria-label="适应画布" title="适应画布">⤢</button><button type="button" data-map-zoom="in" aria-label="放大画布" title="放大">+</button></div>
+<div id="mindMapZoom" role="group" aria-label="画布缩放"><button type="button" data-map-zoom="out" aria-label="缩小画布" title="缩小">{control_icon("minus")}</button><button type="button" data-map-zoom="fit" aria-label="适应画布" title="适应画布">{control_icon("scan")}</button><button type="button" data-map-zoom="in" aria-label="放大画布" title="放大">{control_icon("plus")}</button></div>
   <pre class="markmap" id="mm"></pre>
 </div>
 <script>
