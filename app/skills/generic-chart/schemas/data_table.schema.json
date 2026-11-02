@@ -50,7 +50,8 @@
     ],
     "height": "scroll window max height in px, default 360, range 180..1000",
     "locale": "optional BCP47 locale, default inferred zh-CN/en-US from headers/title",
-    "theme": "light|dark, default light"
+    "theme": "light|dark, default light",
+    "financialMarket": "US|CN|HK|international; required for role=change, independent of theme and language"
   },
   "fileInputs": {
     "payload": "--payload reads a small JSON config; dataSource reads the source JSON directly. Relative source paths resolve from invocation cwd. No HTTP or model-generated transcription.",
@@ -66,7 +67,26 @@
     "date": "Formats YYYYMMDD as YYYY-MM-DD and replaces ISO T separator with a space. No timezone conversion or inferred source timezone.",
     "missing": "null renders —; zero and false remain actual values; absent mapped fields fail with row/path details rather than silently discard data.",
     "longValues": "Cells are plain selectable text with a compact single-line display and native hover title for the full value. No cell click action or detail dialog. Source records remain complete.",
-    "sorting": "First click sorts descending, next ascending; switching columns starts descending. Only the active header shows one highlighted directional arrow. Sorting covers all source rows, nulls last."
+    "sorting": "First click sorts descending, next ascending; switching columns starts descending. Only the active header shows one highlighted directional arrow. Sorting covers all source rows, nulls last.",
+    "role": "data (default), index or change. index hides its visible header, uses a compact 40px default width (28..80), small muted text and 4px cell side padding. It preserves supplied ordinal/rank values during sorting. change is only for verified signed price/return changes, not all percentages; requires explicit financialMarket.",
+    "link": {
+      "urlField": "Exact source field path with a verified HTTPS URL; null/unsafe URLs remain plain text.",
+      "lookup": {
+        "keyField": "source identity field, e.g. symbol",
+        "lookup": {
+          "path": "local verified URL catalog JSON",
+          "recordsPath": [
+            "instruments"
+          ],
+          "keyField": "symbol",
+          "urlField": "detail_url",
+          "where": {
+            "asset_type": "etf"
+          }
+        }
+      },
+      "behavior": "Use either {urlField} or {keyField,lookup}. Join offline, never fetch pages or construct an exchange/slug from a bare ticker. Conflicting catalog identities remain unlinked. Links open a new tab and show a dashed underline on hover/focus. Whole rows and plain cells remain non-clickable."
+    }
   },
   "modelInstructions": [
     "For structured records, rankings, lists or screening results requested as a table, prefer this component without requiring the user to name a component or say no Markdown. Explicit Markdown/plain-text requests take priority. Small prose-only concept or option comparisons may use Markdown. Source retrieval scope remains the user/model decision.",
@@ -75,10 +95,11 @@
     "Choose columns and formats from actual source fields, values and units. Keep percentages and currencies faithful. Do not invent rows or fill missing values with zero.",
     "The component renders the table, sticky header, local sorting and all rows through its own scroll window; do not repeat the same table as Markdown or create custom HTML for these supported features.",
     "Fullscreen is available in the upper-right toolbar. Normal mode scrolls only within the bounded window; fullscreen expands the table without refetching. Local sorting does not change the source; cells have no click action or dialog.",
-    "A large table can expose every input record but cannot create data the upstream API did not fetch. Preserve upstream pagination/coverage limitations in the answer."
+    "A large table can expose every input record but cannot create data the upstream API did not fetch. Preserve upstream pagination/coverage limitations in the answer.",
+    "Choose semantic roles from actual fields and user intent. Mark ordinal columns role=index; mark signed price/return change columns role=change with explicit financialMarket. For a ticker and its display name map the same verified source URL or catalog identity. Preserve source rank and numbers, and do not color ordinary percentage metrics."
   ],
   "agentContract": {
-    "input": "Pass --payload with a small JSON configuration using dataSource.path/recordsPath and columns[].field/label/type, or rows for small inline records. Optional height (180..1000, default360), locale, theme light|dark; column type text|number|percent|date, digits0..12, prefix/suffix, width80..640. Relative source paths resolve from invocation cwd. --output must be a standalone HTML path. No axes or series are required.",
+    "input": "Pass --payload with a small JSON configuration using dataSource.path/recordsPath and columns[].field/label/type, or rows for small inline records. Optional height (180..1000, default360), locale, theme light|dark; column type text|number|percent|date, digits0..12, prefix/suffix, width80..640 (index28..80, default40). Relative source paths resolve from invocation cwd. --output must be a standalone HTML path. No axes or series are required. Set role=index on ordinal/rank columns. Set role=change only on signed price/return changes and provide financialMarket (US: green up/red down; CN/HK: red up/green down). Supply verified links via column.link.urlField or an offline lookup. Never color fees/yields/ratios merely because they are percentages.",
     "output": "Complete source records, bounded scrolling, sticky headers, fullscreen, sorting all records, plain text cells without click actions. Do not repeat the same data as a Markdown table.",
     "coverage": "Renderer completeness covers its input file only; it does not fetch missing upstream pages. Source SHA-256 and selected row count are returned.",
     "presentation": {
@@ -106,6 +127,40 @@
         }
       ],
       "title": "optional localized title"
+    },
+    "columnSemantics": {
+      "role": "index hides the label and uses small muted text/compact width; change applies signed market colors; data stays neutral.",
+      "financialMarket": "Explicit US|CN|HK|international. Language and theme never choose color direction.",
+      "link": {
+        "keyField": "symbol",
+        "lookup": {
+          "path": "path to an already-verified local catalog",
+          "recordsPath": [
+            "instruments"
+          ],
+          "keyField": "symbol",
+          "urlField": "detail_url",
+          "where": {
+            "asset_type": "etf"
+          }
+        }
+      },
+      "alternativeLink": {
+        "urlField": "verifiedDetailUrl"
+      },
+      "safety": "Do not guess market/exchange/URL; missing or ambiguous verified identities remain plain text. Fee/ordinary percentage columns stay role=data."
+    },
+    "verifiedCatalogExample": {
+      "path": "app/skills/ainvest-web-navigation/references/instruments.json",
+      "recordsPath": [
+        "instruments"
+      ],
+      "keyField": "symbol",
+      "urlField": "detail_url",
+      "where": {
+        "asset_type": "etf"
+      },
+      "availability": "Optional existing AInvest Web navigation catalog. Match asset_type to the actual source (etf or stock); only use when installed/readable. If unavailable, use verified URL fields or that navigation skill. No guessed exchange/slug or remote fetch inside renderer."
     }
   },
   "presentation": {
