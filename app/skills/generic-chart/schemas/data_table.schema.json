@@ -65,7 +65,7 @@
     "percent": "Values are already percentage numbers (4.2 becomes 4.2%), never implicitly multiply by 100. Convert source fractions explicitly upstream when required.",
     "date": "Formats YYYYMMDD as YYYY-MM-DD and replaces ISO T separator with a space. No timezone conversion or inferred source timezone.",
     "missing": "null renders —; zero and false remain actual values; absent mapped fields fail with row/path details rather than silently discard data.",
-    "longValues": "Cells have a compact single-line display; click a cell to read its full untruncated value, including on touch devices. Row records are never truncated.",
+    "longValues": "Cells are plain selectable text with a compact single-line display and native hover title for the full value. No cell click action or detail dialog. Source records remain complete.",
     "sorting": "First click sorts descending, next ascending; switching columns starts descending. Only the active header shows one highlighted directional arrow. Sorting covers all source rows, nulls last."
   },
   "modelInstructions": [
@@ -73,12 +73,12 @@
     "This is a generic table renderer, not a data provider. Fetch trustworthy data first. Use an existing transformation tool for derived metrics, explicit filtering or aggregation.",
     "Choose columns and formats from actual source fields, values and units. Keep percentages and currencies faithful. Do not invent rows or fill missing values with zero.",
     "The component renders the table, sticky header, local sorting and all rows through its own scroll window; do not repeat the same table as Markdown or create custom HTML for these supported features.",
-    "Fullscreen is available in the upper-right toolbar. Normal mode scrolls only within the bounded window; fullscreen expands the table without refetching. Local sorting and cell-detail view do not change the source.",
+    "Fullscreen is available in the upper-right toolbar. Normal mode scrolls only within the bounded window; fullscreen expands the table without refetching. Local sorting does not change the source; cells have no click action or dialog.",
     "A large table can expose every input record but cannot create data the upstream API did not fetch. Preserve upstream pagination/coverage limitations in the answer."
   ],
   "agentContract": {
     "input": "Read the full schema at schemaPath. Pass a small --payload JSON with dataSource.path/recordsPath and columns[].field/label/type; local JSON is read directly. Or use rows for small inline records.",
-    "output": "Complete source records, bounded scrolling, sticky headers, fullscreen, sorting all records, full cell detail. Do not repeat the same data as a Markdown table.",
+    "output": "Complete source records, bounded scrolling, sticky headers, fullscreen, sorting all records, plain text cells without click actions. Do not repeat the same data as a Markdown table.",
     "coverage": "Renderer completeness covers its input file only; it does not fetch missing upstream pages. Source SHA-256 and selected row count are returned."
   }
 }

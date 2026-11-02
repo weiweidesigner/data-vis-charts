@@ -47,7 +47,7 @@ def test_html_escapes_source():
     assert json.loads(html.split('<script id="table-data" type="application/json">')[1].split('</script>')[0])['rows'][0][0] == p['rows'][0]['name']
 
 
-def test_scroll_sort_details_and_iframe_fullscreen(tmp_path):
+def test_scroll_sort_plain_cells_and_iframe_fullscreen(tmp_path):
     table = tmp_path / 'table.html'
     table.write_text(module.build_html(module.normalize(payload())))
     host = tmp_path / 'host.html'
@@ -82,9 +82,8 @@ def test_scroll_sort_details_and_iframe_fullscreen(tmp_path):
                 frame.locator('.head-button').nth(1).click()
                 assert frame.locator('tr[data-row-index]').first.get_attribute('data-row-index') == '1499'
                 frame.locator('tr[data-row-index] .cell-value').first.click()
-                assert frame.locator('dialog').evaluate('(e)=>e.open')
-                assert frame.locator('.detail-content').inner_text() == 'Record 1499'
-                frame.locator('.close-detail').click()
+                assert frame.locator('dialog, tbody button').count() == 0
+                assert frame.locator('tr[data-row-index] .cell-value').first.get_attribute('title') == 'Record 1499'
                 normal = frame.locator('.data-table-component').bounding_box()['height']
                 frame.locator('.fullscreen-button').click()
                 page.wait_for_function('document.fullscreenElement !== null')
