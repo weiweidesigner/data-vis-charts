@@ -83,7 +83,7 @@ def test_scroll_sort_plain_cells_and_iframe_fullscreen(tmp_path):
                 assert frame.locator('tr[data-row-index]').first.get_attribute('data-row-index') == '1499'
                 frame.locator('tr[data-row-index] .cell-value').first.click()
                 assert frame.locator('dialog, tbody button').count() == 0
-                assert frame.locator('tr[data-row-index] .cell-value').first.get_attribute('title') == 'Record 1499'
+                assert frame.locator('tr[data-row-index] .cell-value').first.get_attribute('title') is None
                 normal = frame.locator('.data-table-component').bounding_box()['height']
                 frame.locator('.fullscreen-button').click()
                 page.wait_for_function('document.fullscreenElement !== null')

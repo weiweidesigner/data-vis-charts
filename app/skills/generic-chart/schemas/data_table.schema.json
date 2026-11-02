@@ -66,7 +66,7 @@
     "percent": "Values are already percentage numbers (4.2 becomes 4.2%), never implicitly multiply by 100. Convert source fractions explicitly upstream when required.",
     "date": "Formats YYYYMMDD as YYYY-MM-DD and replaces ISO T separator with a space. No timezone conversion or inferred source timezone.",
     "missing": "null renders —; zero and false remain actual values; absent mapped fields fail with row/path details rather than silently discard data.",
-    "longValues": "Cells are plain selectable text with a compact single-line display and native hover title for the full value. No cell click action or detail dialog. Source records remain complete.",
+    "longValues": "Cells are selectable single-line text without hover tooltips; complete values remain embedded. Verified links open in a new tab; no detail dialog.",
     "sorting": "First click sorts descending, next ascending; switching columns starts descending. Only the active header shows one highlighted directional arrow. Sorting covers all source rows, nulls last.",
     "role": "data (default), index or change. index hides its visible header, uses a compact 40px default width (28..80), small muted text and 4px cell side padding. It preserves supplied ordinal/rank values during sorting. change is only for verified signed price/return changes, not all percentages; requires explicit financialMarket.",
     "link": {
@@ -86,7 +86,9 @@
         }
       },
       "behavior": "Use either {urlField} or {keyField,lookup}. Join offline, never fetch pages or construct an exchange/slug from a bare ticker. Conflicting catalog identities remain unlinked. Links open a new tab and show a dashed underline on hover/focus. Whole rows and plain cells remain non-clickable."
-    }
+    },
+    "sizing": "Measure formatted content and headers; compact index and short columns stay fixed, the widest text column receives spare width. Narrow screens scroll horizontally.",
+    "instrumentNameLinks": "A name/companyName/securityName/instrumentName field without explicit link mapping shares an existing unambiguous HTTPS URL from the same row symbol/ticker/code column. Never constructs URLs; explicit missing/ambiguous mappings remain plain text."
   },
   "modelInstructions": [
     "For structured records, rankings, lists or screening results requested as a table, prefer this component without requiring the user to name a component or say no Markdown. Explicit Markdown/plain-text requests take priority. Small prose-only concept or option comparisons may use Markdown. Source retrieval scope remains the user/model decision.",

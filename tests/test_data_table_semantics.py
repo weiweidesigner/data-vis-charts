@@ -82,3 +82,17 @@ def test_compact_index_change_semantics_and_hover_links(tmp_path):
                 assert not errors
                 ctx.close()
         finally:browser.close()
+
+
+def test_name_reuses_only_unambiguous_verified_row_identity():
+    c=module.normalize({'columns':[{'field':'symbol','link':{'urlField':'url'}},{'field':'name'}],
+        'rows':[{'symbol':'ABC','name':'Company','url':'https://example.com/abc'},
+                {'symbol':'NONE','name':'Missing','url':None}]})
+    assert c['links']==[['https://example.com/abc']*2,[None,None]]
+    assert c['linkCoverage'][1]=={'field':'name','linkedRows':1,'unlinkedRows':1}
+    explicit=module.normalize({'columns':[{'field':'symbol','link':{'urlField':'url'}},{'field':'name','link':{'urlField':'other'}}],
+        'rows':[{'symbol':'ABC','name':'Company','url':'https://example.com/abc','other':None}]})
+    assert explicit['links'][0][1] is None
+    conflict={**c,'columns':[{'field':'symbol'},{'field':'ticker'},{'field':'name'}],
+        'links':[['https://example.com/a','https://example.com/b',None]]}
+    assert module.inherit_instrument_links(conflict)['links'][0][2] is None
