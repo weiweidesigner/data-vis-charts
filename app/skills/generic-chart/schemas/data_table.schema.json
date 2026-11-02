@@ -65,7 +65,8 @@
     "percent": "Values are already percentage numbers (4.2 becomes 4.2%), never implicitly multiply by 100. Convert source fractions explicitly upstream when required.",
     "date": "Formats YYYYMMDD as YYYY-MM-DD and replaces ISO T separator with a space. No timezone conversion or inferred source timezone.",
     "missing": "null renders —; zero and false remain actual values; absent mapped fields fail with row/path details rather than silently discard data.",
-    "longValues": "Cells have a compact single-line display; click a cell to read its full untruncated value, including on touch devices. Row records are never truncated."
+    "longValues": "Cells have a compact single-line display; click a cell to read its full untruncated value, including on touch devices. Row records are never truncated.",
+    "sorting": "First click sorts descending, next ascending; switching columns starts descending. Only the active header shows one highlighted directional arrow. Sorting covers all source rows, nulls last."
   },
   "modelInstructions": [
     "Use dataSource with already-fetched JSON for complete lists, detail tables, many rows, or a user request for all records. The model supplies only the path, recordsPath and column mappings; do not copy a large dataset into CLI/Markdown.",

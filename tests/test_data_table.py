@@ -71,7 +71,14 @@ def test_scroll_sort_details_and_iframe_fullscreen(tmp_path):
                 frame.locator('.table-viewport').evaluate('(e)=>e.scrollTop=e.scrollHeight')
                 frame.wait_for_selector('tr[data-row-index="1499"]')
                 assert frame.locator('tr[data-row-index]').count() < 40
+                assert frame.locator('.table-count, .table-footer').count() == 0
+                assert frame.locator('.head-button svg').count() == 0
                 frame.locator('.head-button').nth(1).click()
+                assert frame.locator('th[aria-sort=descending]').count() == 1
+                assert frame.locator('.head-button svg').count() == 1
+                frame.locator('.head-button').nth(1).click()
+                assert frame.locator('th[aria-sort=ascending]').count() == 1
+                assert frame.locator('tr[data-row-index]').first.get_attribute('data-row-index') == '0'
                 frame.locator('.head-button').nth(1).click()
                 assert frame.locator('tr[data-row-index]').first.get_attribute('data-row-index') == '1499'
                 frame.locator('tr[data-row-index] .cell-value').first.click()
