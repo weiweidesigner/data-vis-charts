@@ -120,7 +120,10 @@ def main():
     config=normalize(payload);out=Path(args.output);out.parent.mkdir(parents=True,exist_ok=True);out.write_text(build_html(config),encoding='utf-8')
     if args.payload_output:
         p=Path(args.payload_output);p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(config,ensure_ascii=False,allow_nan=False,indent=2))
-    print(json.dumps({'ok':True,'output':str(out.resolve()),'chartName':'data_table','rowCount':len(config['rows']),'columnCount':len(config['columns']),'fileSource':config['fileSource']},ensure_ascii=False))
+    presentation={'kind':'table','status':'rendered','artifact':str(out.resolve()),'coveredFields':[c['field'] for c in config['columns']],
+                  'scope':{'rowCount':len(config['rows']),'columnCount':len(config['columns']),'sourceCoverage':'all-input-records-only','fileSource':config['fileSource']},
+                  'markdownPolicy':'The table component already presents these input records and selected fields. Do not repeat them as a Markdown table, row-by-row list or duplicate title. Add conclusions, comparisons and material limitations in prose. Honor an explicit user request for Markdown or plain text.'}
+    print(json.dumps({'ok':True,'output':str(out.resolve()),'chartName':'data_table','rowCount':len(config['rows']),'columnCount':len(config['columns']),'fileSource':config['fileSource'],'presentation':presentation},ensure_ascii=False))
 
 if __name__=='__main__':
     try:main()

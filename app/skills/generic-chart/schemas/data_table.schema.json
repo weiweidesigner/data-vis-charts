@@ -69,6 +69,7 @@
     "sorting": "First click sorts descending, next ascending; switching columns starts descending. Only the active header shows one highlighted directional arrow. Sorting covers all source rows, nulls last."
   },
   "modelInstructions": [
+    "For structured records, rankings, lists or screening results requested as a table, prefer this component without requiring the user to name a component or say no Markdown. Explicit Markdown/plain-text requests take priority. Small prose-only concept or option comparisons may use Markdown. Source retrieval scope remains the user/model decision.",
     "Use dataSource with already-fetched JSON for complete lists, detail tables, many rows, or a user request for all records. The model supplies only the path, recordsPath and column mappings; do not copy a large dataset into CLI/Markdown.",
     "This is a generic table renderer, not a data provider. Fetch trustworthy data first. Use an existing transformation tool for derived metrics, explicit filtering or aggregation.",
     "Choose columns and formats from actual source fields, values and units. Keep percentages and currencies faithful. Do not invent rows or fill missing values with zero.",
@@ -77,8 +78,39 @@
     "A large table can expose every input record but cannot create data the upstream API did not fetch. Preserve upstream pagination/coverage limitations in the answer."
   ],
   "agentContract": {
-    "input": "Read the full schema at schemaPath. Pass a small --payload JSON with dataSource.path/recordsPath and columns[].field/label/type; local JSON is read directly. Or use rows for small inline records.",
+    "input": "Pass --payload with a small JSON configuration using dataSource.path/recordsPath and columns[].field/label/type, or rows for small inline records. Optional height (180..1000, default360), locale, theme light|dark; column type text|number|percent|date, digits0..12, prefix/suffix, width80..640. Relative source paths resolve from invocation cwd. --output must be a standalone HTML path. No axes or series are required.",
     "output": "Complete source records, bounded scrolling, sticky headers, fullscreen, sorting all records, plain text cells without click actions. Do not repeat the same data as a Markdown table.",
-    "coverage": "Renderer completeness covers its input file only; it does not fetch missing upstream pages. Source SHA-256 and selected row count are returned."
+    "coverage": "Renderer completeness covers its input file only; it does not fetch missing upstream pages. Source SHA-256 and selected row count are returned.",
+    "presentation": {
+      "kind": "table",
+      "markdownPolicy": "The table component already presents these input records and selected fields. Do not repeat them as a Markdown table, row-by-row list or duplicate title. Add conclusions, comparisons and material limitations in prose. Honor an explicit user request for Markdown or plain text.",
+      "scope": "Input records and selected fields only; rendering a file does not prove that upstream pagination is complete."
+    },
+    "payloadShape": {
+      "dataSource": {
+        "path": "outputs/data/source.json",
+        "recordsPath": [
+          "records"
+        ]
+      },
+      "columns": [
+        {
+          "field": "name",
+          "label": "名称",
+          "type": "text"
+        },
+        {
+          "field": "value",
+          "label": "数值",
+          "type": "number"
+        }
+      ],
+      "title": "optional localized title"
+    }
+  },
+  "presentation": {
+    "kind": "table",
+    "markdownPolicy": "The table component already presents these input records and selected fields. Do not repeat them as a Markdown table, row-by-row list or duplicate title. Add conclusions, comparisons and material limitations in prose. Honor an explicit user request for Markdown or plain text.",
+    "scope": "Input records and selected fields only; rendering a file does not prove that upstream pagination is complete."
   }
 }
