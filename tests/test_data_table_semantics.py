@@ -77,7 +77,7 @@ def test_compact_index_change_semantics_and_hover_links(tmp_path):
                 page.set_viewport_size({'width':360,'height':800})
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
                 page.locator('.fullscreen-button').click();page.wait_for_function('document.fullscreenElement!==null')
-                assert page.locator('tr[data-row-index="0"] td').first.bounding_box()['width']<=41
+                page.wait_for_function('''()=>{const cell=document.querySelector('tr[data-row-index="0"] td');return cell && cell.getBoundingClientRect().width<=41}''')
                 page.locator('.fullscreen-button').click()
                 assert not errors
                 ctx.close()
